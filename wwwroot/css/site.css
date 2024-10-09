@@ -18,5 +18,10 @@ html {
 }
 
 body {
+  font-family: "Comic Sans MS", sans-serif;
   margin-bottom: 60px;
+}
+
+h1, h2, h3, h4 {
+  font-family: "Papyrus", serif;
 }
