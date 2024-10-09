@@ -7,7 +7,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <AdditionalFiles Include="Views\Home\Index.cshtml" />
+      <Folder Include="Pages\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <AdditionalFiles Include="Views\Home\Login.cshtml" />
+      <AdditionalFiles Include="Views\Login\Login.cshtml" />
     </ItemGroup>
 
 </Project>
