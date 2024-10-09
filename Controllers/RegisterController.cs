@@ -2,12 +2,12 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ScaryCavesWeb.Controllers;
 
-public class LoginController : Controller
+public class RegisterController : Controller
 {
 
-    private readonly ILogger<LoginController> _logger;
+    private readonly ILogger<RegisterController> _logger;
 
-    public LoginController(ILogger<LoginController> logger)
+    public RegisterController(ILogger<RegisterController> logger)
     {
         _logger = logger;
     }
@@ -21,14 +21,14 @@ public class LoginController : Controller
     [HttpPost]
     public IActionResult Index(string playerName, string password)
     {
-        _logger.LogDebug("login attempt for {PlayerName}", playerName);
+        _logger.LogDebug("register new player attempt for {PlayerName}", playerName);
         // todo authentication
         if (!string.IsNullOrEmpty(playerName))
         {
             return RedirectToAction("Room", "Room", new { id = 99 });
         }
 
-        ViewBag.ErrorMessage = "Invalid login attempt";
+        ViewBag.ErrorMessage = "Invalid registration attempt";
         return View();
     }
 }
