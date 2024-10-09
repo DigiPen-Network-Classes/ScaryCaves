@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScaryCavesWeb", "ScaryCavesWeb.csproj", "{1C72B69E-A8F4-4B8D-A0E5-BECD7BC0EF02}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScaryCavesWeb", "ScaryCavesWeb/ScaryCavesWeb.csproj", "{1C72B69E-A8F4-4B8D-A0E5-BECD7BC0EF02}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

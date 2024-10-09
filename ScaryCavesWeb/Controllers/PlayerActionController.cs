@@ -1,0 +1,39 @@
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using ScaryCavesWeb.Models;
+using ScaryCavesWeb.Services;
+
+namespace ScaryCavesWeb.Controllers;
+
+[Authorize]
+public class PlayerActionController : ScaryController
+{
+    public PlayerActionController(ILogger<ScaryController> logger, ScaryCaveSettings settings, PlayerDatabase playerDatabase, Rooms rooms) : base(logger, settings, playerDatabase, rooms)
+    {
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> GoTo([Required] Direction? direction)
+    {
+        Logger.LogInformation("Player {PlayerName} is attempting to go to direction {Direction}", User.Identity?.Name, direction);
+        var playerName = User.Identity?.Name;
+        if (string.IsNullOrEmpty(playerName) || direction == null)
+        {
+            return RedirectToAction("Index", "Home");
+        }
+        var player = await PlayerDatabase.Get(playerName);
+        if (player == null)
+        {
+            // TODO expiration case etc..
+            return RedirectToAction("Index", "Home");
+        }
+        PlayerRoom playerRoom = new PlayerRoom(player, RoomsDatabase[player.CurrentRoomId]);
+        if (playerRoom.Go(direction.Value))
+        {
+            await PlayerDatabase.Set(player);
+        }
+        // redirect to show the new state
+        return RedirectToAction("Room", "Home");
+    }
+}

@@ -1,0 +1,22 @@
+@model PlayerRoom
+<div class="text-center">
+    <h1>Room @Model.Room.Id: @Model.Room.Name</h1>
+    <p class="room-description">@Model.Room.Description</p>
+    <p>Some things you could do:</p>
+    <ul class="player-actions">
+        @foreach (var action in Model.GetAvailableActions())
+        {
+            <li>
+                <form method="post" action="@action.ActionName">
+                    <input type="hidden" name="verb" value="@action.Verb" />
+                    <input type="hidden" name="direction" value="@action.Direction" />
+                    <button type="submit">@action.Text</button>
+                </form>
+            </li>
+        }
+    </ul>
+</div>
+<div>
+    <p>Player: @Model.Player.Name</p>
+    <p>PlayerStatsHere</p>
+</div>

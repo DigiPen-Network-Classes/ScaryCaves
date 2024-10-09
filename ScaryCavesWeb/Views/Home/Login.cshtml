@@ -1,5 +1,5 @@
 @{
-    ViewData["Title"] = "New Player";
+    ViewData["Title"] = "Login";
 }
 <h2>Login</h2>
 @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
@@ -8,7 +8,9 @@
         @ViewBag.ErrorMessage
     </div>
 }
-<form method="post" action="/Register">
+<p><a asp-action="Register">New Player? Register</a></p>
+
+<form method="post" asp-action="Login">
     <div class="form-group">
         <label for="playername">Player Name:</label>
         <input type="text" name="playername" id="playername" class="form-control" required />
@@ -17,5 +19,5 @@
         <label for="password">Password:</label>
         <input type="password" name="password" id="password" class="form-control" required />
     </div>
-    <button type="submit" class="btn btn-primary">Create Player</button>
+    <button type="submit" class="btn btn-primary">Login</button>
 </form>
