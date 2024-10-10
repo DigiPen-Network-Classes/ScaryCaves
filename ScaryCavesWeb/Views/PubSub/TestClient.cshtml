@@ -1,0 +1,50 @@
+@model TestClientModel
+<div class="text-center">
+    <h1>WebSocket Client</h1>
+    <p>Hello, @Model.PlayerName</p>
+    <button id="connect">Connect</button>
+    <button id="disconnect" disabled>Disconnect</button>
+    <button id="clear">Clear</button>
+
+    <div id="messages">
+    </div>
+</div>
+
+<script type="text/javascript">
+    const messages = document.getElementById("messages");
+    const connectButton = document.getElementById("connect");
+    const disconnectButton = document.getElementById("disconnect");
+    const clearButton = document.getElementById("clear");
+
+    let socket;
+
+    const addMessage = message => {
+        messages.innerHTML += `<p>${message}</p>`;
+    };
+
+    const setButtonState = (isConnected) => {
+        connectButton.disabled = isConnected;
+        disconnectButton.disabled = !isConnected;
+    };
+
+    connectButton.onclick = () => {
+        // TODO look up the correct port number
+        socket = new WebSocket("ws://localhost:8000/ws");
+        setButtonState(true);
+
+        socket.addEventListener('open', () => addMessage("Connected to server."));
+        socket.addEventListener('message', event => addMessage(`Server: ${event.data}`));
+        socket.addEventListener('close', () => {
+            addMessage("Disconnected from server.");
+            setButtonState(false);
+        });
+        socket.addEventListener('error',
+        error => addMessage(`error: ${error.message}`));
+    }
+
+    disconnectButton.onclick = () => socket?.close();
+
+    clearButton.onclick = () => messages.innerHTML = "";
+
+
+</script>

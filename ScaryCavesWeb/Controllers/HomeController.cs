@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -13,13 +12,6 @@ public class HomeController : ScaryController
 {
     public HomeController(ILogger<ScaryController> logger, ScaryCaveSettings settings, PlayerDatabase playerDatabase, Rooms rooms) : base(logger, settings, playerDatabase, rooms)
     {
-    }
-
-    private string? PlayerName =>  User.FindFirst(ClaimTypes.Name)?.Value;
-
-    private async Task<Player?> GetAuthPlayer()
-    {
-        return await PlayerDatabase.Get(PlayerName ?? throw new Exception("no player name"));
     }
 
     public IActionResult Index()

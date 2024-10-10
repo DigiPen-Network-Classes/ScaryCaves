@@ -5,8 +5,6 @@ public class Player
     public string Name { get; init; } = "";
     public string Password { get; init; } = "";
     public int CurrentRoomId { get; set; }
-
-
 }
 
 // Constructor that takes all required properties

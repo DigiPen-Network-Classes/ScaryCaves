@@ -1,4 +1,6 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
+using ScaryCavesWeb.Models;
 using ScaryCavesWeb.Services;
 
 namespace ScaryCavesWeb.Controllers;
@@ -16,5 +18,12 @@ public abstract class ScaryController : Controller
         PlayerDatabase = playerDatabase;
         RoomsDatabase = rooms;
         Settings = settings;
+    }
+
+    protected string? PlayerName =>  User.FindFirst(ClaimTypes.Name)?.Value;
+
+    protected async Task<Player?> GetAuthPlayer()
+    {
+        return await PlayerDatabase.Get(PlayerName ?? throw new Exception("no player name"));
     }
 }
