@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using ScaryCavesWeb.Controllers;
 using ScaryCavesWeb.Services;
 using StackExchange.Redis;
 
@@ -50,6 +51,32 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// WebSockets support
+var wsOptions = new WebSocketOptions
+{
+    KeepAliveInterval = TimeSpan.FromMinutes(2)
+};
+app.UseWebSockets(wsOptions);
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path == "/ws")
+    {
+        if (context.WebSockets.IsWebSocketRequest)
+        {
+            var ws = await context.WebSockets.AcceptWebSocketAsync();
+            await WebSocketHandler.HandleWebSocketAsync(context, ws);
+        }
+        else
+        {
+            context.Response.StatusCode = 400;
+        }
+    }
+    else
+    {
+        await next();
+    }
+});
 
 app.MapControllerRoute(
     name: "default",
