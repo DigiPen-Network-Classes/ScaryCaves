@@ -9,9 +9,13 @@ public static class ServiceDependency
 {
     public static IServiceCollection AddScaryCaveWeb(this IServiceCollection services)
     {
+        // scoped for players
         services.AddScoped<PlayerDatabase>();
+
+        services.AddSingleton<WorldDatabase>();
         services.AddSingleton<PasswordHasher>();
-        services.AddSingleton<Rooms>(_ => Rooms.Build());
+        services.AddSingleton<RoomDatabase>(_ => RoomDatabase.Build());
+        services.AddSingleton<MobDatabase>(_ => MobDatabase.Build());
         return services;
     }
 

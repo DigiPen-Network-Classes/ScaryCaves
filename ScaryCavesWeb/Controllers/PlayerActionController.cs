@@ -9,7 +9,7 @@ namespace ScaryCavesWeb.Controllers;
 [Authorize]
 public class PlayerActionController : ScaryController
 {
-    public PlayerActionController(ILogger<ScaryController> logger, ScaryCaveSettings settings, PlayerDatabase playerDatabase, Rooms rooms) : base(logger, settings, playerDatabase, rooms)
+    public PlayerActionController(ILogger<ScaryController> logger, ScaryCaveSettings settings, PlayerDatabase playerDatabase, RoomDatabase roomDatabase) : base(logger, settings, playerDatabase, roomDatabase)
     {
     }
 
@@ -28,7 +28,9 @@ public class PlayerActionController : ScaryController
             // TODO expiration case etc..
             return RedirectToAction("Index", "Home");
         }
-        PlayerRoom playerRoom = new PlayerRoom(player, RoomsDatabase[player.CurrentRoomId]);
+
+        // TODO mob instances
+        PlayerRoom playerRoom = new PlayerRoom(player, RoomDatabaseDatabase[player.CurrentRoomId], []);
         if (playerRoom.Go(direction.Value))
         {
             await PlayerDatabase.Set(player);

@@ -33,7 +33,6 @@ builder.Services.AddScaryCaveWeb();
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -81,5 +80,8 @@ app.Use(async (context, next) =>
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+// places, everyone
+await app.Services.GetRequiredService<WorldDatabase>().Initialize();
 
 app.Run();

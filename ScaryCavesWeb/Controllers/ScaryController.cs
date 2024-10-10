@@ -10,13 +10,13 @@ public abstract class ScaryController : Controller
     protected ILogger<ScaryController> Logger { get; }
     protected PlayerDatabase PlayerDatabase { get; }
     protected ScaryCaveSettings Settings { get; }
-    protected Rooms RoomsDatabase { get; }
+    protected RoomDatabase RoomDatabaseDatabase { get; }
 
-    protected ScaryController(ILogger<ScaryController> logger, ScaryCaveSettings settings, PlayerDatabase playerDatabase, Rooms rooms)
+    protected ScaryController(ILogger<ScaryController> logger, ScaryCaveSettings settings, PlayerDatabase playerDatabase, RoomDatabase roomDatabase)
     {
         Logger = logger;
         PlayerDatabase = playerDatabase;
-        RoomsDatabase = rooms;
+        RoomDatabaseDatabase = roomDatabase;
         Settings = settings;
     }
 

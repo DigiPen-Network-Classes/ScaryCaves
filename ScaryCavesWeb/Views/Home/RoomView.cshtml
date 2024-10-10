@@ -2,9 +2,13 @@
 <div class="text-center">
     <h1>Room @Model.Room.Id: @Model.Room.Name</h1>
     <p class="room-description">@Model.Room.Description</p>
+    @foreach (var m in Model.Mobs)
+    {
+        <p class="mob-description">@m.Definition.Description</p>
+    }
     <p>Some things you could do:</p>
     <ul class="player-actions">
-        @foreach (var action in Model.GetAvailableActions())
+        @foreach (var action in Model.GetAvailableMovement())
         {
             <li>
                 <form method="post" action="@action.ActionName">

@@ -15,6 +15,10 @@
     <ItemGroup>
       <Content Remove="Data\rooms.json" />
       <EmbeddedResource Include="Data\rooms.json" />
+      <Content Remove="Data\mobs.json" />
+      <EmbeddedResource Include="Data\mobs.json">
+        <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      </EmbeddedResource>
     </ItemGroup>
 
 </Project>

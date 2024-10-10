@@ -32,10 +32,10 @@
     "Id": 3,
     "Name": "Small Hut",
     "Description": "The hut is filthy and falling apart. There is a small table in the center of the room with a candle burning on it. **TODO KEY, TODO MOB**",
-    "Exits":
-      {
+    "Exits": {
         "west":2
-      }
+    },
+    "mobs": [ "giant_rat" ]
   },
   {
     "Id": 4,

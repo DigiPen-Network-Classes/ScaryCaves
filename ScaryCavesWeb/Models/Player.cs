@@ -1,5 +1,8 @@
 namespace ScaryCavesWeb.Models;
 
+/// <summary>
+/// Serialized to player database for storage
+/// </summary>
 public class Player
 {
     public string Name { get; init; } = "";
@@ -7,32 +10,19 @@ public class Player
     public int CurrentRoomId { get; set; }
 }
 
-// Constructor that takes all required properties
-public class Room(int id, string name, string description, IReadOnlyDictionary<Direction, int> exits)
-{
-    public int Id { get; } = id;
-    public string Name { get; } = name;
-    public string Description { get; } = description;
-    public IReadOnlyDictionary<Direction, int> Exits { get; } = exits;
 
-    public int? this[Direction d] {
-        get
-        {
-            if (Exits.TryGetValue(d, out var roomId))
-            {
-                return roomId;
-            }
-            return null;
-        }
-    }
-}
-
-public class PlayerRoom(Player p, Room r)
+/// <summary>
+/// Reflects a player that is in a room
+/// </summary>
+/// <param name="p"></param>
+/// <param name="r"></param>
+public class PlayerRoom(Player p, Room r, List<Mob> mobs)
 {
     public Player Player { get; } = p;
     public Room Room { get; } = r;
+    public List<Mob> Mobs { get; } = mobs;
 
-    public List<PlayerAction> GetAvailableActions()
+    public List<PlayerAction> GetAvailableMovement()
     {
         var actions = Room
             .Exits
@@ -44,6 +34,7 @@ public class PlayerRoom(Player p, Room r)
         // Open door
         return actions;
     }
+
     public bool Go(Direction direction)
     {
         // can we actually go that way?

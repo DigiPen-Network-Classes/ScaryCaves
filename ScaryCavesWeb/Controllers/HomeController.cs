@@ -10,7 +10,7 @@ namespace ScaryCavesWeb.Controllers;
 
 public class HomeController : ScaryController
 {
-    public HomeController(ILogger<ScaryController> logger, ScaryCaveSettings settings, PlayerDatabase playerDatabase, Rooms rooms) : base(logger, settings, playerDatabase, rooms)
+    public HomeController(ILogger<ScaryController> logger, ScaryCaveSettings settings, PlayerDatabase playerDatabase, RoomDatabase roomDatabase) : base(logger, settings, playerDatabase, roomDatabase)
     {
     }
 
@@ -106,8 +106,9 @@ public class HomeController : ScaryController
             return RedirectToAction("Login");
         }
 
-        var room = RoomsDatabase[player.CurrentRoomId];
-        return View("RoomView", new PlayerRoom(player, room));
+        var room = RoomDatabaseDatabase[player.CurrentRoomId];
+        // TODO get mobs that are in the room
+        return View("RoomView", new PlayerRoom(player, room, []));
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
