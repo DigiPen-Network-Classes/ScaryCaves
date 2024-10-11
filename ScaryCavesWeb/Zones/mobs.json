@@ -1,7 +1,7 @@
 [
   { "Id": "giant_rat",
     "Name": "Giant Rat",
-    "Description": "A giant rat with sharp teeth and red eyes.",
+    "Description": "A giant rat with sharp teeth and red eyes glares at you.",
     "Challenge": 0.125,
     "HitPoints": 7,
     "ArmorClass": 12,

@@ -1,0 +1,61 @@
+{
+  "Name": "scary-cave",
+  "Rooms": [
+    {
+      "Id": 0,
+      "Name": "Entrance",
+      "Description": "You are standing at the entrance of the cave. It is dark and damp. You can hear the sound of water dripping from the ceiling.",
+      "Exits": {
+        "north": 1
+      }
+    },
+    {
+      "Id": 1,
+      "Name": "Tunnel",
+      "Description": "You are in a long tunnel. The walls are covered in moss and the air is cold and damp.",
+      "Exits": {
+        "north": 2,
+        "south": 0
+      }
+    },
+    {
+      "Id": 2,
+      "Name": "Wide Room",
+      "Description": "You are in a wide cavern. The ceiling is high and you can hear the sound of water dripping from the walls.",
+      "Exits": {
+        "north": 4,
+        "south": 1,
+        "east": 3
+      }
+    },
+    {
+      "Id": 3,
+      "Name": "Small Hut",
+      "Description": "The hut is filthy and falling apart. There is a small table in the center of the room with a candle burning on it. **TODO KEY**",
+      "Exits": {
+        "west": 2
+      },
+      "InitialMobs": [
+        "giant_rat"
+      ]
+    },
+    {
+      "Id": 4,
+      "Name": "The Gate",
+      "Description": "The path is barred by an iron gate. **TODO KEY, TODO OPEN/LOCK, TODO MOB**",
+      "Exits": {
+        "north": 5,
+        "south": 2
+      }
+    },
+    {
+      "Id": 5,
+      "Name": "Storeroom",
+      "Description": "The shelves are lined with treasure.",
+      "Exits": {
+        "south": 4
+      }
+    }
+  ],
+  "Mobs": []
+}

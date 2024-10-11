@@ -3,12 +3,17 @@ using System.Reflection;
 using System.Text.Json;
 using ScaryCavesWeb.Models;
 
-namespace ScaryCavesWeb.Services;
+namespace ScaryCavesWeb.Services.Databases;
+
+public interface IMobDatabase
+{
+    MobDefinition? this[string mobId] { get; }
+}
 
 /// <summary>
 /// Mob definitions (static)
 /// </summary>
-public class MobDatabase
+public class MobDatabase : IMobDatabase
 {
     private FrozenDictionary<string, MobDefinition> MobsById { get; set; }
 
@@ -21,6 +26,8 @@ public class MobDatabase
 
     public static MobDatabase Build()
     {
+        return new MobDatabase([]);
+        /*
         // get mobs.json from the embedded resources
         var assembly = Assembly.GetExecutingAssembly();
         using var stream = assembly.GetManifestResourceStream("ScaryCavesWeb.Data.mobs.json");
@@ -28,6 +35,6 @@ public class MobDatabase
         var json = reader.ReadToEnd();
         var mobs = JsonSerializer.Deserialize<List<MobDefinition>>(json);
         return new MobDatabase(mobs!);
+        */
     }
-
 }

@@ -8,7 +8,9 @@ namespace ScaryCavesWeb.Controllers;
 [Authorize]
 public class PubSubController : ScaryController
 {
-    public PubSubController(ILogger<ScaryController> logger, ScaryCaveSettings settings, PlayerDatabase playerDatabase, RoomDatabase roomDatabase) : base(logger, settings, playerDatabase, roomDatabase)
+    public PubSubController(ILogger<PubSubController> logger,
+        ScaryCaveSettings settings,
+        IGrainFactory grainFactory) : base(logger, settings, grainFactory)
     {
     }
 

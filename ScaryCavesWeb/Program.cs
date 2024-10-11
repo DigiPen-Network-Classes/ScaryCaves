@@ -11,11 +11,39 @@ builder.Configuration.Bind("ScaryCaves", settings);
 builder.Services.AddSingleton(settings);
 
 // redis connection
-var redisHost = builder.Configuration.GetSection("Redis:Host").Value;
-var redisPort = builder.Configuration.GetSection("Redis:Port").Value;
-var redisConn = ConnectionMultiplexer.Connect($"{redisHost}:{redisPort}");
+var redisConnectionString = builder.Configuration.GetSection("Redis:ConnectionString").Value;
+// TODO remove this when orleans state works ...
+var redisConn = ConnectionMultiplexer.Connect(redisConnectionString!);
 builder.Services.AddSingleton<IConnectionMultiplexer>(redisConn);
 builder.Services.AddScoped<IDatabase>(sp => sp.GetRequiredService<IConnectionMultiplexer>().GetDatabase());
+
+
+// orleans configuration
+// dev: just use local everything for now
+// use redis for persistence
+/*
+var redisOptions = new ConfigurationOptions
+{
+    EndPoints = { redisConnectionString! },
+    AbortOnConnectFail = false,
+};
+*/
+builder.Host.UseOrleans(static siloBuilder =>
+{
+    siloBuilder.UseLocalhostClustering();
+    siloBuilder.AddRedisGrainStorageAsDefault(options =>
+    {
+        options.ConfigurationOptions = new ConfigurationOptions
+        {
+            EndPoints =
+            {
+                "localhost:6379"
+            },
+            AbortOnConnectFail = false,
+        };
+    });
+    //siloBuilder.AddMemoryGrainStorage("ScaryCaves");
+});
 
 // simple cookie authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -30,7 +58,12 @@ builder.Services.AddAuthorization();
 // my (local, web) dependencies:
 builder.Services.AddScaryCaveWeb();
 
-// Add services to the container.
+// This gets activated by the runtime before we start processing http requests,
+// but after the Orleans Silos are operational
+// "Places, Everyone ..."
+builder.Services.AddHostedService<WorldInitializerHostedService>();
+
+// Add controllers to the container.
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
@@ -77,11 +110,9 @@ app.Use(async (context, next) =>
     }
 });
 
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-
-// places, everyone
-await app.Services.GetRequiredService<WorldDatabase>().Initialize();
 
 app.Run();

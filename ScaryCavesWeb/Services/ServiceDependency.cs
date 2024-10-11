@@ -2,6 +2,10 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
+using ScaryCavesWeb.Models;
+using ScaryCavesWeb.Services.Authentication;
+using ScaryCavesWeb.Services.Databases;
 
 namespace ScaryCavesWeb.Services;
 
@@ -9,20 +13,32 @@ public static class ServiceDependency
 {
     public static IServiceCollection AddScaryCaveWeb(this IServiceCollection services)
     {
-        // scoped for players
-        services.AddScoped<PlayerDatabase>();
+        // authentication
+        services.AddSingleton<IAccountSession, AccountSession>();
+        services.AddSingleton<IPasswordHasher<Account>, PasswordHasher<Account>>();
 
-        services.AddSingleton<WorldDatabase>();
-        services.AddSingleton<PasswordHasher>();
-        services.AddSingleton<RoomDatabase>(_ => RoomDatabase.Build());
-        services.AddSingleton<MobDatabase>(_ => MobDatabase.Build());
+        // databases
+        services.AddSingleton<IAccountDatabase, AccountDatabase>();
+        services.AddSingleton<IZoneDatabase, ZoneDatabase>(_ => ZoneDatabase.Build());
+        services.AddSingleton<IWorldDatabase, WorldDatabase>();
+        services.AddSingleton<IMobDatabase, MobDatabase>(_ => MobDatabase.Build());
+        services.AddSingleton<IMobInstanceDatabase, MobInstanceDatabase>();
+
         return services;
     }
 
-    public static async Task ScaryCaveSignIn(this HttpContext context, string playerName, DateTime expiresUtc)
+    public static async Task ScaryCaveSignIn(this HttpContext context, Account account, DateTime expiresUtc)
     {
-        List<Claim> claims = [new(ClaimTypes.Name, playerName)];
+        ArgumentException.ThrowIfNullOrEmpty(account.PlayerName);
+        ArgumentOutOfRangeException.ThrowIfEqual(account.Id, Guid.Empty);
+
+        List<Claim> claims =
+        [
+            new(ClaimTypes.Name, account.PlayerName),
+            new(ClaimTypes.NameIdentifier, account.Id.ToString())
+        ];
         var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
         // Sign in the player with the claims
         await context.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
             new ClaimsPrincipal(claimsIdentity),

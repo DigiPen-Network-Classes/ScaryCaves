@@ -1,13 +1,40 @@
+
 namespace ScaryCavesWeb.Models;
 
 /// <summary>
 /// Serialized to player database for storage
 /// </summary>
+[GenerateSerializer]
+[Alias("ScaryCavesWeb.Models.Player")]
 public class Player
 {
-    public string Name { get; init; } = "";
-    public string Password { get; init; } = "";
-    public int CurrentRoomId { get; set; }
+    public Player() {}
+
+    public Player(Guid ownerAccountId, string playerName)
+    {
+        ArgumentOutOfRangeException.ThrowIfEqual(ownerAccountId, Guid.Empty);
+        ArgumentException.ThrowIfNullOrEmpty(playerName);
+        OwnerAccountId = ownerAccountId;
+        Name = playerName;
+        CurrentRoomId = Location.StartLocation.RoomId;
+        CurrentZoneName = Location.StartLocation.ZoneName;
+    }
+
+    public Location GetCurrentLocation() => new(CurrentRoomId, CurrentZoneName);
+
+    [Id(0)] public string Name { get; set; } = "";
+
+    [Id(1)] public long CurrentRoomId { get; set; }
+
+    [Id(2)] public string CurrentZoneName { get; set; } = Zone.DefaultZoneName;
+
+    [Id(3)] public Guid OwnerAccountId { get; set; }
+
+    public void SetCurrentLocation(Location currentLocation)
+    {
+        CurrentRoomId = currentLocation.RoomId;
+        CurrentZoneName = currentLocation.ZoneName;
+    }
 }
 
 
@@ -16,11 +43,11 @@ public class Player
 /// </summary>
 /// <param name="p"></param>
 /// <param name="r"></param>
-public class PlayerRoom(Player p, Room r, List<Mob> mobs)
+public class PlayerRoom(Player p, Room r, List<Mob>? mobs=null)
 {
     public Player Player { get; } = p;
     public Room Room { get; } = r;
-    public List<Mob> Mobs { get; } = mobs;
+    public List<Mob> Mobs { get; } = mobs ?? [];
 
     public List<PlayerAction> GetAvailableMovement()
     {
@@ -35,16 +62,17 @@ public class PlayerRoom(Player p, Room r, List<Mob> mobs)
         return actions;
     }
 
-    public bool Go(Direction direction)
+    public bool Attack(string mobInstanceId)
     {
-        // can we actually go that way?
-        var roomId = Room[direction];
-        if (roomId == null)
+        // can we actually attack that mob?
+        var mobGuid = Guid.Parse(mobInstanceId);
+        var mob = Mobs?.FirstOrDefault(m => m.Id == mobGuid);
+        if (mob == null)
         {
-            // can't get there from here
+            // no such mob
             return false;
         }
-        Player.CurrentRoomId = roomId.Value;
+        // eh... now what?
         return true;
     }
 }
@@ -73,7 +101,7 @@ public class PlayerAction(string text, Verb v, Direction? direction)
     public string ActionName =>
         Verb switch
         {
-            Verb.Go => "/PlayerAction/Goto",
+            Verb.Go => "/PlayerAction/MoveTo",
             _ => throw new ArgumentOutOfRangeException()
         };
 }

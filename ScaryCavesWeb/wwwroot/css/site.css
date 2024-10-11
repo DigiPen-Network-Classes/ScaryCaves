@@ -39,3 +39,6 @@ ul.player-actions button {
 p.room-description {
   color: indigo;
 }
+p.mob-description {
+  color: darkred;
+}

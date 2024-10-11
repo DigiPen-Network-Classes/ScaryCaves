@@ -1,44 +1,71 @@
-using StackExchange.Redis;
+
+using Newtonsoft.Json;
 
 namespace ScaryCavesWeb.Models;
 
-// Constructor that takes all required properties for serialization
-public class Room(int id, string name, string description, List<string>? initialMobs, IReadOnlyDictionary<Direction, int> exits)
+[GenerateSerializer]
+[Alias("ScaryCavesWeb.Models.RoomDefinition")]
+public class RoomDefinition(long id, string name, string description, List<string>? initialMobs, IReadOnlyDictionary<Direction, long> exits)
 {
-    public int Id { get; } = id;
+    [Id(0)]
+    public long Id { get; } = id;
+    [Id(1)]
     public string Name { get; } = name;
+    [Id(2)]
     public string Description { get; } = description;
+    [Id(3)]
     public List<string> InitialMobs { get; } = initialMobs ?? [];
-    public IReadOnlyDictionary<Direction, int> Exits { get; } = exits;
+    [Id(4)]
+    public IReadOnlyDictionary<Direction, long> Exits { get; } = exits;
+}
 
-    public string RoomMobsKey => $"room:{Id}:mobs";
+[GenerateSerializer]
+[Alias("ScaryCavesWeb.Models.Room")]
+public class Room
+{
+    [Id(0)] public long Id { get; }
+    [Id(1)] public string Name { get; }
+    [Id(2)] public string Description { get; }
+    [Id(3)] public IReadOnlyDictionary<Direction, long> Exits { get; }
+    [Id(4)] private HashSet<string> PlayersInRoom { get; }
+    [Id(5)] public string ZoneName { get; set; }
 
-    public int? this[Direction d]
+    [JsonIgnore]
+    public Location Location => new(Id, ZoneName);
+
+    public Room(string zoneName, RoomDefinition roomDefinition)
     {
-        get
-        {
-            if (Exits.TryGetValue(d, out var roomId))
-            {
-                return roomId;
-            }
-
-            return null;
-        }
+        Id = roomDefinition.Id;
+        Name = roomDefinition.Name;
+        Description = roomDefinition.Description;
+        Exits = roomDefinition.Exits;
+        ZoneName = zoneName;
+        PlayersInRoom = [];
     }
 
-    public async Task AddMob(IDatabase database, Mob mob)
+    [JsonConstructor]
+    public Room(long id, string name, string description, IReadOnlyDictionary<Direction, long> exits, HashSet<string>? playersInRoom, string zoneName)
     {
-        await database.ListRightPushAsync(RoomMobsKey, mob.Id.ToString());
+        Id = id;
+        Name = name;
+        Description = description;
+        Exits = exits;
+        PlayersInRoom = playersInRoom ?? [];
+        ZoneName = zoneName;
     }
 
-    public async Task RemoveAllMobs(IDatabase database)
+    private Location? GetExit(Direction d) => Exits.TryGetValue(d, out var roomId) ? new Location(roomId) : null;
+
+    [JsonIgnore]
+    public Location? this[Direction d] => GetExit(d);
+
+    public void AddPlayer(string playerName)
     {
-        // delete any mobs left in this room
-        foreach (var mobInstanceId in await database.ListRangeAsync(RoomMobsKey))
-        {
-            var mobInstanceKey = Mob.GetMobKey(mobInstanceId);
-            await database.KeyDeleteAsync(mobInstanceKey);
-        }
-        await database.KeyDeleteAsync(RoomMobsKey);
+        PlayersInRoom.Add(playerName);
+    }
+
+    public void RemovePlayer(string playerName)
+    {
+        PlayersInRoom.Remove(playerName);
     }
 }

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using StackExchange.Redis;
 
 namespace ScaryCavesWeb.Models;
@@ -9,29 +10,28 @@ namespace ScaryCavesWeb.Models;
 public class Mob
 {
     public Guid Id { get; }
+    public string Name { get; }
+    public string Description { get; }
     public string MobDefinitionId { get; }
     public int CurrentHitPoints { get; }
     public int CurrentArmorClass { get; }
-    public MobDefinition Definition { get; }
 
-    public Mob(MobDefinition definition)
+    [JsonConstructor]
+    public Mob(Guid id, string mobDefinitionId, string name, int currentHitPoints, int currentArmorClass, string description)
     {
-        Id = Guid.NewGuid();
-        MobDefinitionId = definition.Id;
-        CurrentHitPoints = definition.HitPoints;
-        CurrentArmorClass = definition.ArmorClass;
-        Definition = definition;
+       Id = id;
+       Name = name;
+       MobDefinitionId = mobDefinitionId;
+       CurrentHitPoints = currentHitPoints;
+       CurrentArmorClass = currentArmorClass;
+       Description = description;
+
+    }
+    public Mob(MobDefinition definition) : this(Guid.NewGuid(), definition.Name, definition.Id, definition.HitPoints, definition.ArmorClass, definition.Description)
+    {
     }
 
-    public Mob(Guid id, string mobDefinitionId, int currentHp, int currentAc, MobDefinition definition)
-    {
-        Id = id;
-        MobDefinitionId = mobDefinitionId;
-        Definition = definition;
-        CurrentHitPoints = currentHp;
-        CurrentArmorClass = currentAc;
-    }
-
+    [JsonIgnore]
     public string MobKey => GetMobKey(Id.ToString());
 
     public static string GetMobKey(RedisValue id)
@@ -43,6 +43,12 @@ public class Mob
     {
         var instanceJson = JsonSerializer.Serialize(this);
         await database.StringSetAsync(MobKey, instanceJson);
+    }
+
+    public static async Task<Mob?> GetMobInstance(IDatabase database, RedisValue instanceId)
+    {
+        var instanceJson = await database.StringGetAsync(GetMobKey(instanceId));
+        return instanceJson != default ? JsonSerializer.Deserialize<Mob>(instanceJson!) : null;
     }
 }
 
