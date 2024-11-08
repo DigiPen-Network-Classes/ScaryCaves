@@ -31,25 +31,7 @@ public class Mob
     {
     }
 
-    [JsonIgnore]
-    public string MobKey => GetMobKey(Id.ToString());
 
-    public static string GetMobKey(RedisValue id)
-    {
-        return $"mob:{id}";
-    }
-
-    public async Task Update(IDatabase database)
-    {
-        var instanceJson = JsonSerializer.Serialize(this);
-        await database.StringSetAsync(MobKey, instanceJson);
-    }
-
-    public static async Task<Mob?> GetMobInstance(IDatabase database, RedisValue instanceId)
-    {
-        var instanceJson = await database.StringGetAsync(GetMobKey(instanceId));
-        return instanceJson != default ? JsonSerializer.Deserialize<Mob>(instanceJson!) : null;
-    }
 }
 
 public class MobDefinition(string id, string name, string description, double challenge, int hitPoints, int armorClass, int strength, int dexterity, int constitution, int intelligence, int wisdom, int charisma, List<AttackDefinition> attacks)

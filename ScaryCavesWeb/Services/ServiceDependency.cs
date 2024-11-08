@@ -21,8 +21,6 @@ public static class ServiceDependency
         services.AddSingleton<IAccountDatabase, AccountDatabase>();
         services.AddSingleton<IZoneDatabase, ZoneDatabase>(_ => ZoneDatabase.Build());
         services.AddSingleton<IWorldDatabase, WorldDatabase>();
-        services.AddSingleton<IMobDatabase, MobDatabase>(_ => MobDatabase.Build());
-        services.AddSingleton<IMobInstanceDatabase, MobInstanceDatabase>();
 
         return services;
     }
