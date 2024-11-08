@@ -29,6 +29,7 @@ public class Room
     [Id(3)] public IReadOnlyDictionary<Direction, long> Exits { get; }
     [Id(4)] private HashSet<string> PlayersInRoom { get; }
     [Id(5)] public string ZoneName { get; set; }
+    [Id(6)] public HashSet<string> MobsInRoom { get; }
 
     [JsonIgnore]
     public Location Location => new(Id, ZoneName);
@@ -41,10 +42,11 @@ public class Room
         Exits = roomDefinition.Exits;
         ZoneName = zoneName;
         PlayersInRoom = [];
+        MobsInRoom = [..roomDefinition.InitialMobs];
     }
 
     [JsonConstructor]
-    public Room(long id, string name, string description, IReadOnlyDictionary<Direction, long> exits, HashSet<string>? playersInRoom, string zoneName)
+    public Room(long id, string name, string description, IReadOnlyDictionary<Direction, long> exits, HashSet<string>? playersInRoom, string zoneName, HashSet<string>? mobsInRoom)
     {
         Id = id;
         Name = name;
@@ -52,9 +54,10 @@ public class Room
         Exits = exits;
         PlayersInRoom = playersInRoom ?? [];
         ZoneName = zoneName;
+        MobsInRoom = mobsInRoom ?? [];
     }
 
-    private Location? GetExit(Direction d) => Exits.TryGetValue(d, out var roomId) ? new Location(roomId) : null;
+    private Location? GetExit(Direction d) => Exits.TryGetValue(d, out var roomId) ? new Location(roomId, ZoneName) : null;
 
     [JsonIgnore]
     public Location? this[Direction d] => GetExit(d);
@@ -67,5 +70,15 @@ public class Room
     public void RemovePlayer(string playerName)
     {
         PlayersInRoom.Remove(playerName);
+    }
+
+    public void AddMob(string mobId)
+    {
+        MobsInRoom.Add(mobId);
+    }
+
+    public void RemoveMob(string mobId)
+    {
+        MobsInRoom.Remove(mobId);
     }
 }

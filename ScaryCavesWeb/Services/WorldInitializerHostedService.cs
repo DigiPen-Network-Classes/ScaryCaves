@@ -2,19 +2,12 @@ using ScaryCavesWeb.Services.Databases;
 
 namespace ScaryCavesWeb.Services;
 
-public class WorldInitializerHostedService : IHostedService
+public class WorldInitializerHostedService(IServiceProvider serviceProvider) : IHostedService
 {
-    private readonly IServiceProvider _serviceProvider;
-
-    public WorldInitializerHostedService(IServiceProvider serviceProvider)
-    {
-        _serviceProvider = serviceProvider;
-    }
-
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         // Resolve IWorldDatabase using a scoped service scope
-        using var scope = _serviceProvider.CreateScope();
+        using var scope = serviceProvider.CreateScope();
         var worldDatabase = scope.ServiceProvider.GetRequiredService<IWorldDatabase>();
         await worldDatabase.ResetZones();
     }

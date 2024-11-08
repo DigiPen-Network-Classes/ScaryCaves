@@ -3,39 +3,12 @@ namespace ScaryCavesWeb.Models;
 
 [GenerateSerializer]
 [Alias("ScaryCavesWeb.Models.ZoneDefinition")]
-public class ZoneDefinition(string name, List<RoomDefinition> rooms)
+public class ZoneDefinition(string name, List<RoomDefinition> rooms, List<MobDefinition> mobs)
 {
     [Id(0)] public string Name { get; set; } = name;
     [Id(1)] public List<RoomDefinition> Rooms { get; set; } = rooms;
-}
+    [Id(2)] public List<MobDefinition> Mobs { get; set; } = mobs;
 
-[GenerateSerializer]
-[Alias("ScaryCavesWeb.Models.Zone")]
-public class Zone
-{
-    public Zone()
-    {
-        ZoneName = DefaultZoneName;
-        Rooms = [];
-    }
-    public Zone(ZoneDefinition zoneDefinition)
-    {
-        ArgumentNullException.ThrowIfNull(zoneDefinition);
-        ArgumentException.ThrowIfNullOrEmpty(zoneDefinition.Name);
-        ArgumentNullException.ThrowIfNull(zoneDefinition.Rooms);
-        ZoneName = zoneDefinition.Name;
-        Rooms = zoneDefinition.Rooms;
-    }
-
-    public const string DefaultZoneName = "scary-cave";
-
-    [Id(0)]
-    public string ZoneName { get; set; }
-
-    [Id(1)] public List<RoomDefinition> Rooms { get; set; }
-
-    public RoomDefinition? GetRoom(long roomId)
-    {
-        return Rooms.SingleOrDefault(r => r.Id == roomId);
-    }
+    public RoomDefinition? GetRoom(long roomId) => Rooms.SingleOrDefault(r => r.Id == roomId);
+    public MobDefinition? GetMob(string mobId) => Mobs.SingleOrDefault(m => m.Id == mobId);
 }

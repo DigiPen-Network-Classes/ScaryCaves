@@ -1,4 +1,6 @@
 
+using Newtonsoft.Json;
+
 namespace ScaryCavesWeb.Models;
 
 /// <summary>
@@ -8,27 +10,23 @@ namespace ScaryCavesWeb.Models;
 [Alias("ScaryCavesWeb.Models.Player")]
 public class Player
 {
-    public Player() {}
+    [Id(0)] public string Name { get; set; }
+    [Id(1)] public long CurrentRoomId { get; set; }
+    [Id(2)] public string CurrentZoneName { get; set; }
+    [Id(3)] public Guid OwnerAccountId { get; set; }
 
-    public Player(Guid ownerAccountId, string playerName)
+    [JsonConstructor]
+    public Player(Guid ownerAccountId, string playerName, long currentRoomId, string currentZoneName)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(ownerAccountId, Guid.Empty);
         ArgumentException.ThrowIfNullOrEmpty(playerName);
         OwnerAccountId = ownerAccountId;
         Name = playerName;
-        CurrentRoomId = Location.StartLocation.RoomId;
-        CurrentZoneName = Location.StartLocation.ZoneName;
+        CurrentRoomId = currentRoomId;
+        CurrentZoneName = currentZoneName;
     }
 
     public Location GetCurrentLocation() => new(CurrentRoomId, CurrentZoneName);
-
-    [Id(0)] public string Name { get; set; } = "";
-
-    [Id(1)] public long CurrentRoomId { get; set; }
-
-    [Id(2)] public string CurrentZoneName { get; set; } = Zone.DefaultZoneName;
-
-    [Id(3)] public Guid OwnerAccountId { get; set; }
 
     public void SetCurrentLocation(Location currentLocation)
     {
@@ -36,7 +34,6 @@ public class Player
         CurrentZoneName = currentLocation.ZoneName;
     }
 }
-
 
 /// <summary>
 /// Reflects a player that is in a room
@@ -64,16 +61,7 @@ public class PlayerRoom(Player p, Room r, List<Mob>? mobs=null)
 
     public bool Attack(string mobInstanceId)
     {
-        // can we actually attack that mob?
-        var mobGuid = Guid.Parse(mobInstanceId);
-        var mob = Mobs?.FirstOrDefault(m => m.Id == mobGuid);
-        if (mob == null)
-        {
-            // no such mob
-            return false;
-        }
-        // eh... now what?
-        return true;
+        return false; // TODO
     }
 }
 

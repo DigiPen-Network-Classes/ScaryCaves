@@ -1,6 +1,4 @@
 using System.Text.Json;
-using Microsoft.AspNetCore.Identity;
-using ScaryCavesWeb.Models;
 using StackExchange.Redis;
 
 namespace ScaryCavesWeb.Services.Databases;
@@ -11,22 +9,12 @@ public interface IAccountDatabase
     public Task<bool> SetAccountId(string name, Guid accountId, When when = When.Always);
 }
 
-public class AccountDatabase(IConnectionMultiplexer redis, ScaryCaveSettings settings, IPasswordHasher<Account> passwordHasher) : IAccountDatabase
+public class AccountDatabase(IConnectionMultiplexer redis, ScaryCaveSettings settings) : IAccountDatabase
 {
     private IDatabase Database { get; } = redis.GetDatabase();
     private ScaryCaveSettings Settings { get; } = settings;
-    private IPasswordHasher<Account> PasswordHasher { get; } = passwordHasher;
 
     private const string AccountByNameKeyPrefix = "accounts/name";
-
-    /*
-    public async Task<Account?> Create(string accountName, string password)
-    {
-        var account = new Account(accountName);
-        account.Password = PasswordHasher.HashPassword(account, password);
-        var success = await Set(account, When.NotExists);
-        return success ? account : null;
-    }*/
 
     public async Task<Guid?> GetAccountId(string name)
     {
@@ -36,6 +24,8 @@ public class AccountDatabase(IConnectionMultiplexer redis, ScaryCaveSettings set
 
     public async Task<bool> SetAccountId(string name, Guid accountId, When when = When.Always)
     {
-        return await Database.StringSetAsync($"{AccountByNameKeyPrefix}/{name}", JsonSerializer.Serialize(accountId), Settings.AccountExpires, when);
+        // for now, don't expire ---
+        // TODO will have to come back to this before launching
+        return await Database.StringSetAsync($"{AccountByNameKeyPrefix}/{name}", JsonSerializer.Serialize(accountId), null, when);
     }
 }

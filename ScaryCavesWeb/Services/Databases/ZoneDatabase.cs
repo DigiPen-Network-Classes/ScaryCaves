@@ -23,10 +23,14 @@ public class ZoneDatabase(List<ZoneDefinition> zones) : IZoneDatabase
     {
         var assembly = Assembly.GetExecutingAssembly();
         using var stream = assembly.GetManifestResourceStream("ScaryCavesWeb.Zones.scary-cave.json");
-        using var reader = new StreamReader(stream!);
+        if (stream == null)
+        {
+            throw new InvalidOperationException("scary-cave.json not found in assembly manifest");
+        }
+        using var reader = new StreamReader(stream);
         var json = reader.ReadToEnd();
         var zone = JsonSerializer.Deserialize<ZoneDefinition>(json);
-        if (zone == null || zone.Name == null || zone.Rooms == null)
+        if (zone?.Name == null || zone.Rooms == null || zone.Mobs == null)
         {
             throw new Exception("deserialization of scary-cave.json failed");
         }

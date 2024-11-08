@@ -1,13 +1,6 @@
 using ScaryCavesWeb.Models;
-using ScaryCavesWeb.Services.Databases;
 
 namespace ScaryCavesWeb.Actors;
-
-[Alias("ScaryCavesWeb.Actors.IZoneActor")]
-public interface IZoneActor : IGrainWithStringKey
-{
-
-}
 
 [Alias("ScaryCavesWeb.Actors.IZoneDefinitionActor")]
 public interface IZoneDefinitionActor : IGrainWithStringKey
@@ -16,44 +9,48 @@ public interface IZoneDefinitionActor : IGrainWithStringKey
     Task<RoomDefinition?> GetRoomDefinition(long roomId);
 
     [Alias("Reload")]
-    Task<Zone> Reload();
+    Task Reload();
 
     [Alias("ReloadFrom")]
-    Task<Zone> ReloadFrom(ZoneDefinition roomDefinition);
+    Task ReloadFrom(ZoneDefinition roomDefinition);
 }
 
 public class ZoneActor(ILogger<ZoneActor> logger,
-    IWorldDatabase worldDatabase,
-    [PersistentState(nameof(Zone))] IPersistentState<Zone> zoneState): Grain, IZoneActor, IZoneDefinitionActor
+    [PersistentState(nameof(ZoneDefinition))] IPersistentState<ZoneDefinition> zoneDefinitionState): Grain, IZoneDefinitionActor
 {
     private ILogger<ZoneActor> Logger { get; } = logger;
-    private IPersistentState<Zone> ZoneState { get; } = zoneState;
-    private IWorldDatabase WorldDatabase { get; } = worldDatabase;
+    private IPersistentState<ZoneDefinition> ZoneDefinitionState { get; } = zoneDefinitionState;
+    private ZoneDefinition ZoneDefinition => ZoneDefinitionState.State;
 
     public async Task<RoomDefinition?> GetRoomDefinition(long roomId)
+
     {
-        if (!ZoneState.RecordExists)
+        if (!ZoneDefinitionState.RecordExists)
         {
             await Reload();
         }
 
-        return ZoneState.State.GetRoom(roomId);
+        return ZoneDefinition.GetRoom(roomId);
     }
 
-    public async Task<Zone> Reload()
+    public async Task Reload()
     {
-        var zoneDefinition = WorldDatabase.GetZoneDefinition(this.GetPrimaryKeyString());
-        if (zoneDefinition == null)
+        Logger.LogInformation("Reloading Zone {ZoneName}", ZoneDefinition.Name);
+        foreach (var room in ZoneDefinition.Rooms)
         {
-            throw new InvalidOperationException($"No zone definition found for zone {this.GetPrimaryKeyString()}");
+            await GrainFactory.GetGrain<IRoomDefinitionActor>(room.Id, ZoneDefinition.Name).ReloadFrom(room);
         }
-        return await ReloadFrom(zoneDefinition);
+
+        foreach (var mob in ZoneDefinition.Mobs)
+        {
+            await GrainFactory.GetGrain<IMobActor>(mob.Id).ReloadFrom(mob);
+        }
     }
 
-    public async Task<Zone> ReloadFrom(ZoneDefinition zoneDefinition)
+    public async Task ReloadFrom(ZoneDefinition zoneDefinition)
     {
-        ZoneState.State = new Zone(zoneDefinition);
-        await ZoneState.WriteStateAsync();
-        return ZoneState.State;
+        ZoneDefinitionState.State = zoneDefinition;
+        await ZoneDefinitionState.WriteStateAsync();
+        await Reload();
     }
 }

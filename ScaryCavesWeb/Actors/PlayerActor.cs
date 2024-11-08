@@ -1,4 +1,5 @@
 using ScaryCavesWeb.Models;
+using ScaryCavesWeb.Services;
 
 namespace ScaryCavesWeb.Actors;
 
@@ -18,7 +19,7 @@ public interface IPlayerActor : IGrainWithStringKey
     Task<bool> StartOver();
 
     [Alias("TeleportTo")]
-    Task<bool> TeleportTo(long roomId = 0, string zoneName = Zone.DefaultZoneName);
+    Task<bool> TeleportTo(long roomId, string zoneName);
 
     [Alias("MoveTo")]
     Task<bool> MoveTo(Direction direction);
@@ -28,9 +29,12 @@ public interface IPlayerActor : IGrainWithStringKey
 }
 
 public class PlayerActor(ILogger<PlayerActor> logger,
+    ScaryCaveSettings settings,
     [PersistentState(nameof(Player))] IPersistentState<Player> playerState) : Grain, IPlayerActor
 {
     private ILogger<PlayerActor> Logger { get; } = logger;
+    public ScaryCaveSettings Settings { get; } = settings;
+
     /// <summary>
     /// TODO lifetime of state needs to line up with redis lifetime of account/player
     /// </summary>
@@ -40,7 +44,7 @@ public class PlayerActor(ILogger<PlayerActor> logger,
 
     public async Task<bool> Create(Guid ownerAccountId)
     {
-        PlayerState.State  = new Player(ownerAccountId, this.GetPrimaryKeyString());
+        PlayerState.State  = new Player(ownerAccountId, this.GetPrimaryKeyString(),  Settings.DefaultRoomId, Settings.DefaultZoneName);
         await PlayerState.WriteStateAsync();
         return true;
     }
@@ -66,10 +70,10 @@ public class PlayerActor(ILogger<PlayerActor> logger,
         // TODO reset player stats (hp, etc)
         // TODO reset player inventory
         // TODO reset player location
-        return await TeleportTo();
+        return await TeleportTo(Settings.DefaultRoomId, Settings.DefaultZoneName);
     }
 
-    public async Task<bool> TeleportTo(long roomId = 0, string zoneName = Zone.DefaultZoneName)
+    public async Task<bool> TeleportTo(long roomId, string zoneName)
     {
         // TODO permissions, etc.
         var location = new Location(roomId, zoneName);

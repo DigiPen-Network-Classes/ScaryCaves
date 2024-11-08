@@ -1,9 +1,14 @@
+using ScaryCavesWeb.Models;
+
 namespace ScaryCavesWeb.Services;
 
 public class ScaryCaveSettings
 {
     private const int defaultSeconds = 300;
     public int? DefaultTimeToLive { get; set; }
+
+    public string DefaultZoneName { get; set; } = "scary-cave";
+    public long DefaultRoomId { get; set; }
 
     /// <summary>
     /// How long do player records stay around?

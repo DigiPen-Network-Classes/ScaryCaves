@@ -25,7 +25,7 @@ public class WorldDatabase(ILogger<WorldDatabase> logger, IClusterClient cluster
 
     public async Task ResetZones()
     {
-        Logger.LogInformation("Resetting World State");
+        Logger.LogInformation("Resetting World State for all zones");
 
         foreach (var zone in ZoneDatabase.Zones)
         {

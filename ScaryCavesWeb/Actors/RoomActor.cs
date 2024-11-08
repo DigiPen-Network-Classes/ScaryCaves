@@ -60,6 +60,7 @@ public class RoomActor(ILogger<RoomActor> logger,
     {
         ArgumentOutOfRangeException.ThrowIfNotEqual(roomDefinition.Id, this.GetPrimaryKeyLong(out var zoneName));
         RoomState.State = new Room(zoneName, roomDefinition);
+        roomDefinition.InitialMobs.ForEach(mob => RoomState.State.AddMob(mob));
         await RoomState.WriteStateAsync();
         return RoomState.State;
     }
@@ -108,7 +109,6 @@ public class RoomActor(ILogger<RoomActor> logger,
 
     private Location ThisLocation
     {
-
         get
         {
             var id = this.GetPrimaryKeyLong(out var zoneName);
