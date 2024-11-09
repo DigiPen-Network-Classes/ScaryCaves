@@ -11,7 +11,7 @@ namespace ScaryCavesWeb.Actors;
 public interface IRoomDefinitionActor : IGrainWithIntegerCompoundKey
 {
     [Alias("ReloadFrom")]
-    Task<Room> ReloadFrom(RoomDefinition roomDefinition);
+    Task<Room> ReloadFrom(ZoneDefinition zoneDefinition, RoomDefinition roomDefinition);
 }
 
 /// <summary>
@@ -56,32 +56,40 @@ public class RoomActor(ILogger<RoomActor> logger,
         return RoomState.State;
     }
 
-    public async Task<Room> ReloadFrom(RoomDefinition roomDefinition)
+    public async Task<Room> ReloadFrom(ZoneDefinition zoneDefinition, RoomDefinition roomDefinition)
     {
-        ArgumentOutOfRangeException.ThrowIfNotEqual(roomDefinition.Id, this.GetPrimaryKeyLong(out var zoneName));
+        var roomId = this.GetPrimaryKeyLong(out var zoneName);
+        ArgumentOutOfRangeException.ThrowIfNotEqual(roomDefinition.Id, roomId);
         RoomState.State = new Room(zoneName, roomDefinition);
-        roomDefinition.InitialMobs.ForEach(mob => RoomState.State.AddMob(mob));
+        RoomState.State.ClearMobs();
         await RoomState.WriteStateAsync();
+        foreach (var mob in roomDefinition.InitialMobs)
+        {
+            var mobDefinition = zoneDefinition.GetMobDefinition(mob.DefinitionId) ?? new MobDefinition("Unknown", "Unknown", "Unknown");
+            var mobState = new MobState(mob.InstanceId, mob.DefinitionId, mobDefinition.Name, mobDefinition.Description);
+            RoomState.State.AddMob(mobState);
+            // tell the individual to reload too:
+            await GrainFactory.GetGrain<IMobActor>(mob.InstanceId).Reload(zoneName, roomId, mobDefinition);
+        }
         return RoomState.State;
     }
 
     /// <summary>
-    /// Reload this actor's room state
-    ///
-    /// Note: must use the Key of the actor to determine the
-    /// Zone Name and Room ID, since the state at this point is not reliable.
+    /// Reload this room state
+    /// Note: must use the Key of the actor to determine the Zone Name and Room ID,
+    /// since the state at this point is not reliable.
     /// </summary>
     /// <returns></returns>
     public async Task<Room> Reload()
     {
         var myRoomId = this.GetPrimaryKeyLong(out var zoneName);
-        var roomDefinition = await GrainFactory.GetGrain<IZoneDefinitionActor>(zoneName).GetRoomDefinition(myRoomId);
+        var (zoneDefinition, roomDefinition) = await GrainFactory.GetGrain<IZoneDefinitionActor>(zoneName).GetRoomDefinition(myRoomId);
         if (roomDefinition == null)
         {
             throw new Exception($"Room {myRoomId} not found in zone {zoneName}");
         }
 
-        return await ReloadFrom(roomDefinition);
+        return await ReloadFrom(zoneDefinition, roomDefinition);
     }
 
     public async Task<Room?> Move(Player player, Direction direction)

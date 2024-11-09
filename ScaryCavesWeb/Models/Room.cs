@@ -5,18 +5,28 @@ namespace ScaryCavesWeb.Models;
 
 [GenerateSerializer]
 [Alias("ScaryCavesWeb.Models.RoomDefinition")]
-public class RoomDefinition(long id, string name, string description, List<string>? initialMobs, IReadOnlyDictionary<Direction, long> exits)
+public class RoomDefinition
 {
+    [JsonConstructor]
+    public RoomDefinition(long id, string name, string description, IReadOnlyDictionary<Direction, long> exits, List<MobIdentifier>? initialMobs)
+    {
+        Id = id;
+        Name = name;
+        Description = description;
+        InitialMobs = initialMobs ?? [];
+        Exits = exits;
+    }
+
     [Id(0)]
-    public long Id { get; } = id;
+    public long Id { get; }
     [Id(1)]
-    public string Name { get; } = name;
+    public string Name { get; }
     [Id(2)]
-    public string Description { get; } = description;
+    public string Description { get; }
     [Id(3)]
-    public List<string> InitialMobs { get; } = initialMobs ?? [];
+    public List<MobIdentifier> InitialMobs { get; }
     [Id(4)]
-    public IReadOnlyDictionary<Direction, long> Exits { get; } = exits;
+    public IReadOnlyDictionary<Direction, long> Exits { get; }
 }
 
 [GenerateSerializer]
@@ -29,7 +39,7 @@ public class Room
     [Id(3)] public IReadOnlyDictionary<Direction, long> Exits { get; }
     [Id(4)] private HashSet<string> PlayersInRoom { get; }
     [Id(5)] public string ZoneName { get; set; }
-    [Id(6)] public HashSet<string> MobsInRoom { get; }
+    [Id(6)] private HashSet<MobState> MobsInRoom { get; }
 
     [JsonIgnore]
     public Location Location => new(Id, ZoneName);
@@ -42,11 +52,11 @@ public class Room
         Exits = roomDefinition.Exits;
         ZoneName = zoneName;
         PlayersInRoom = [];
-        MobsInRoom = [..roomDefinition.InitialMobs];
+        MobsInRoom = [];
     }
 
     [JsonConstructor]
-    public Room(long id, string name, string description, IReadOnlyDictionary<Direction, long> exits, HashSet<string>? playersInRoom, string zoneName, HashSet<string>? mobsInRoom)
+    public Room(long id, string name, string description, IReadOnlyDictionary<Direction, long> exits, HashSet<string>? playersInRoom, string zoneName, HashSet<MobState>? mobsInRoom)
     {
         Id = id;
         Name = name;
@@ -72,13 +82,18 @@ public class Room
         PlayersInRoom.Remove(playerName);
     }
 
-    public void AddMob(string mobId)
+    public void AddMob(MobState mob)
     {
-        MobsInRoom.Add(mobId);
+        MobsInRoom.Add(mob);
     }
 
-    public void RemoveMob(string mobId)
+    public void RemoveMob(MobState mob)
     {
-        MobsInRoom.Remove(mobId);
+        MobsInRoom.Remove(mob);
+    }
+
+    public void ClearMobs()
+    {
+        MobsInRoom.Clear();
     }
 }

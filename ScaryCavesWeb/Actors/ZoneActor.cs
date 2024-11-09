@@ -6,7 +6,7 @@ namespace ScaryCavesWeb.Actors;
 public interface IZoneDefinitionActor : IGrainWithStringKey
 {
     [Alias("GetRoomDefinition")]
-    Task<RoomDefinition?> GetRoomDefinition(long roomId);
+    Task<(ZoneDefinition,RoomDefinition?)> GetRoomDefinition(long roomId);
 
     [Alias("Reload")]
     Task Reload();
@@ -22,15 +22,14 @@ public class ZoneActor(ILogger<ZoneActor> logger,
     private IPersistentState<ZoneDefinition> ZoneDefinitionState { get; } = zoneDefinitionState;
     private ZoneDefinition ZoneDefinition => ZoneDefinitionState.State;
 
-    public async Task<RoomDefinition?> GetRoomDefinition(long roomId)
-
+    public async Task<(ZoneDefinition, RoomDefinition?)> GetRoomDefinition(long roomId)
     {
         if (!ZoneDefinitionState.RecordExists)
         {
             await Reload();
         }
 
-        return ZoneDefinition.GetRoom(roomId);
+        return (ZoneDefinition, ZoneDefinition.GetRoom(roomId));
     }
 
     public async Task Reload()
@@ -38,12 +37,7 @@ public class ZoneActor(ILogger<ZoneActor> logger,
         Logger.LogInformation("Reloading Zone {ZoneName}", ZoneDefinition.Name);
         foreach (var room in ZoneDefinition.Rooms)
         {
-            await GrainFactory.GetGrain<IRoomDefinitionActor>(room.Id, ZoneDefinition.Name).ReloadFrom(room);
-        }
-
-        foreach (var mob in ZoneDefinition.Mobs)
-        {
-            await GrainFactory.GetGrain<IMobActor>(mob.Id).ReloadFrom(mob);
+            await GrainFactory.GetGrain<IRoomDefinitionActor>(room.Id, ZoneDefinition.Name).ReloadFrom(ZoneDefinition, room);
         }
     }
 

@@ -1,4 +1,4 @@
-@model PlayerRoom
+@model RoomState
 @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
 {
 <div class="alert alert-danger">
@@ -28,7 +28,7 @@
         {
             <li>
                 <form method="post" action="/PlayerAction/Attack">
-                    <input type="hidden" name="mobId" value="@mob.Id" />
+                    <input type="hidden" name="mobInstanceId" value="@mob.InstanceId" />
                     <button type="submit">ATTACK @mob.Name</button>
                 </form>
             </li>

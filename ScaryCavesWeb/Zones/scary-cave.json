@@ -5,6 +5,7 @@
       "Id": 0,
       "Name": "Entrance",
       "Description": "You are standing at the entrance of the cave. It is dark and damp. You can hear the sound of water dripping from the ceiling.",
+      "InitialMobs": [],
       "Exits": {
         "north": 1
       }
@@ -12,7 +13,7 @@
     {
       "Id": 1,
       "Name": "Tunnel",
-      "Description": "You are in a long tunnel. The walls are covered in moss and the air is cold and damp.",
+      "Description": "You are in a long tunnel. The walls are covered in moss and the air is cold and damp.","InitialMobs": [],
       "Exits": {
         "north": 2,
         "south": 0
@@ -21,7 +22,7 @@
     {
       "Id": 2,
       "Name": "Wide Room",
-      "Description": "You are in a wide cavern. The ceiling is high and you can hear the sound of water dripping from the walls.",
+      "Description": "You are in a wide cavern. The ceiling is high and you can hear the sound of water dripping from the walls.","InitialMobs": [],
       "Exits": {
         "north": 4,
         "south": 1,
@@ -36,13 +37,14 @@
         "west": 2
       },
       "InitialMobs": [
-        "giant_rat"
+        { "DefinitionId": "giant_rat", "InstanceId": "giant_rat_1" }
       ]
     },
     {
       "Id": 4,
       "Name": "The Gate",
       "Description": "The path is barred by an iron gate. **TODO KEY, TODO OPEN/LOCK, TODO MOB**",
+      "InitialMobs": [],
       "Exits": {
         "north": 5,
         "south": 2
@@ -52,13 +54,15 @@
       "Id": 5,
       "Name": "Storeroom",
       "Description": "The shelves are lined with treasure.",
+      "InitialMobs": [],
       "Exits": {
         "south": 4
       }
     }
   ],
   "Mobs": [
-    { "Id": "giant_rat",
+    {
+      "DefinitionId": "giant_rat",
       "Name": "Giant Rat",
       "Description": "A giant rat with red eyes glares at you hungrily.",
       "Challenge": 0.125,

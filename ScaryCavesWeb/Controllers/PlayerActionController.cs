@@ -25,7 +25,7 @@ public class PlayerActionController(
 
         var currentLocation = player.GetCurrentLocation();
         var room = await GrainFactory.GetGrain<IRoomActor>(currentLocation.RoomId, currentLocation.ZoneName).GetRoom();
-        return View("RoomView", new PlayerRoom(player, room, []));
+        return View("RoomView", new RoomState(player, room, []));
     }
 
     [HttpPost]

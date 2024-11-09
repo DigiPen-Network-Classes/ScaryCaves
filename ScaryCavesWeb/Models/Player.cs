@@ -35,36 +35,6 @@ public class Player
     }
 }
 
-/// <summary>
-/// Reflects a player that is in a room
-/// </summary>
-/// <param name="p"></param>
-/// <param name="r"></param>
-public class PlayerRoom(Player p, Room r, List<Mob>? mobs=null)
-{
-    public Player Player { get; } = p;
-    public Room Room { get; } = r;
-    public List<Mob> Mobs { get; } = mobs ?? [];
-
-    public List<PlayerAction> GetAvailableMovement()
-    {
-        var actions = Room
-            .Exits
-            .Select(exit => new PlayerAction($"GO {exit.Key}", Verb.Go, exit.Key))
-            .ToList();
-
-        // pick up ITEM
-        // Attack Mob
-        // Open door
-        return actions;
-    }
-
-    public bool Attack(string mobInstanceId)
-    {
-        return false; // TODO
-    }
-}
-
 public enum Verb
 {
     Go,
