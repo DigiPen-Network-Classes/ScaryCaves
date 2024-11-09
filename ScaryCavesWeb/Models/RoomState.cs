@@ -4,11 +4,11 @@ namespace ScaryCavesWeb.Models;
 /// Reflects the state of a Room: players, items, mobs
 /// as seen by a particular player (for their actions)
 /// </summary>
-public class RoomState(Player player, Room room, List<MobState> mobs)
+public class RoomState(Player player, Room room)
 {
     public Player Player { get; } = player;
     public Room Room { get; } = room;
-    public List<MobState> Mobs { get; } = mobs;
+    public List<MobState> Mobs { get; } = room.MobsInRoom.ToList();
 
     public List<PlayerAction> GetAvailableMovement()
     {

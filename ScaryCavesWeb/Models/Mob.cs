@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace ScaryCavesWeb.Models;
 
@@ -112,14 +112,6 @@ public class MobDefinition
         Wisdom = wisdom;
         Charisma = charisma;
         Attacks = attacks;
-    }
-
-    public MobDefinition(string definitionId, string name, string description)
-    {
-        DefinitionId = definitionId;
-        Name = name;
-        Description = description;
-        Attacks = [];
     }
 
     [Id(0)]

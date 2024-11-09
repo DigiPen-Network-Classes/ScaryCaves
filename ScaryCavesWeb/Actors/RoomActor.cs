@@ -65,7 +65,11 @@ public class RoomActor(ILogger<RoomActor> logger,
         await RoomState.WriteStateAsync();
         foreach (var mob in roomDefinition.InitialMobs)
         {
-            var mobDefinition = zoneDefinition.GetMobDefinition(mob.DefinitionId) ?? new MobDefinition("Unknown", "Unknown", "Unknown");
+            var mobDefinition = zoneDefinition.GetMobDefinition(mob.DefinitionId);
+            if (mobDefinition == null)
+            {
+                throw new Exception("No mob definition found for " + mob.DefinitionId);
+            }
             var mobState = new MobState(mob.InstanceId, mob.DefinitionId, mobDefinition.Name, mobDefinition.Description);
             RoomState.State.AddMob(mobState);
             // tell the individual to reload too:

@@ -39,7 +39,7 @@ public class Room
     [Id(3)] public IReadOnlyDictionary<Direction, long> Exits { get; }
     [Id(4)] private HashSet<string> PlayersInRoom { get; }
     [Id(5)] public string ZoneName { get; set; }
-    [Id(6)] private HashSet<MobState> MobsInRoom { get; }
+    [Id(6)] public HashSet<MobState> MobsInRoom { get; }
 
     [JsonIgnore]
     public Location Location => new(Id, ZoneName);
