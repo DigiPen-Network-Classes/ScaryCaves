@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using ScaryCavesWeb.Controllers;
+using ScaryCavesWeb.Hubs;
 using ScaryCavesWeb.Services;
 using StackExchange.Redis;
 
@@ -58,6 +60,18 @@ builder.Services.AddAuthorization();
 // my (local, web) dependencies:
 builder.Services.AddScaryCaveWeb();
 
+// signalR
+builder.Services.AddSignalR();
+
+// cors for scarycave-spa
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactApp", b => b.WithOrigins("http://localhost:3000")
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials());
+});
+
 // This gets activated by the runtime before we start processing http requests,
 // but after the Orleans Silos are operational
 // "Places, Everyone ..."
@@ -76,6 +90,8 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+app.UseCors("AllowReactApp");
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
@@ -84,6 +100,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// TODO remove this?
 // WebSockets support
 var wsOptions = new WebSocketOptions
 {
@@ -109,10 +126,18 @@ app.Use(async (context, next) =>
         await next();
     }
 });
-
-
+app.MapHub<GameHub>("/gamehub");
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
+app.UseSpa(spa =>
+{
+    spa.Options.SourcePath = "scarycaves-spa";
+
+    if (app.Environment.IsDevelopment())
+    {
+        //spa.UseReactDevelopmentServer(npmScript: "start");
+    }
+});
 app.Run();

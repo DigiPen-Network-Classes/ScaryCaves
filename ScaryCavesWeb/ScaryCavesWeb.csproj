@@ -8,6 +8,7 @@
 
 
     <ItemGroup>
+      <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="8.0.10" />
       <PackageReference Include="Microsoft.Orleans.Persistence.Redis" Version="8.2.0" />
       <PackageReference Include="Microsoft.Orleans.Server" Version="8.2.0" />
       <PackageReference Include="NRedisStack" Version="0.13.0" />
