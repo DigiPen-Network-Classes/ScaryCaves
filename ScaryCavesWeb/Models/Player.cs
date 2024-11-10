@@ -16,12 +16,12 @@ public class Player
     [Id(3)] public Guid OwnerAccountId { get; set; }
 
     [JsonConstructor]
-    public Player(Guid ownerAccountId, string playerName, long currentRoomId, string currentZoneName)
+    public Player(Guid ownerAccountId, string name, long currentRoomId, string currentZoneName)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(ownerAccountId, Guid.Empty);
-        ArgumentException.ThrowIfNullOrEmpty(playerName);
+        ArgumentException.ThrowIfNullOrEmpty(name);
         OwnerAccountId = ownerAccountId;
-        Name = playerName;
+        Name = name;
         CurrentRoomId = currentRoomId;
         CurrentZoneName = currentZoneName;
     }
