@@ -37,7 +37,7 @@ public class Room
     [Id(1)] public string Name { get; }
     [Id(2)] public string Description { get; }
     [Id(3)] public IReadOnlyDictionary<Direction, long> Exits { get; }
-    [Id(4)] private HashSet<string> PlayersInRoom { get; }
+    [Id(4)] public HashSet<string> PlayersInRoom { get; } = [];
     [Id(5)] public string ZoneName { get; set; }
     [Id(6)] public HashSet<MobState> MobsInRoom { get; }
 
@@ -95,5 +95,16 @@ public class Room
     public void ClearMobs()
     {
         MobsInRoom.Clear();
+    }
+
+    public Room MinusPlayer(string? player)
+    {
+        if (string.IsNullOrEmpty(player))
+        {
+            return this;
+        }
+        var newPlayers = new HashSet<string>(PlayersInRoom);
+        newPlayers.Remove(player);
+        return new Room(Id, Name, Description, Exits, newPlayers, ZoneName, MobsInRoom);
     }
 }

@@ -1,0 +1,127 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-size: 18px;
+}
+
+@media (min-width: 768px) {
+  :root {
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+.btn-primary {
+  color: #fff;
+  background-color: #1b6ec2;
+  border-color: #1861ac;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+  font-size: 18px;
+}
+
+body {
+  font-family: "Comic Sans MS", sans-serif; /* you know it */
+  margin-bottom: 60px;
+}
+
+h1, h2, h3, h4 {
+  font-family: "Papyrus", serif; /* oh yes i did */
+}
+
+.nav-pills .nav-link.active, .nav-pills .show > .nav-link {
+  color: #fff;
+  background-color: #1b6ec2;
+  border-color: #1861ac;
+}
+
+.border-top {
+  border-top: 1px solid #e5e5e5;
+}
+
+.border-bottom {
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.box-shadow {
+  box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
+}
+
+button.accept-policy {
+  font-size: 1rem;
+  line-height: inherit;
+}
+
+.footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  white-space: nowrap;
+  line-height: 60px;
+}
+
+a {
+  color: #0077cc;
+}
+
+a.home-title {
+  color: blue;
+  text-decoration-line: underline;
+}
+
+h4.home-title {
+  margin-top: 2ex;
+}
+
+.navbar-brand {
+  font-size: 1.5rem;
+}
+
+p.home-title {
+  font-size: 30px;
+}
+
+a.navbar-brand {
+    color: #0077cc;
+  white-space: normal;
+  text-align: center;
+  word-break: break-all;
+}
+
+ul.player-action {
+  list-style-type: none;
+  padding-left: 0;
+  margin-left: 0;
+}
+
+ul.player-action li button {
+  margin-bottom: .80rem;
+}
+
+p.player-action {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+h1.room-name {
+
+}
+p.room-description {
+  color: indigo;
+  font-size: 1.25rem;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+p.mob-description {
+  color: darkred;
+}
+
+.other-players {
+  margin-bottom: .80rem;
+}

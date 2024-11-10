@@ -92,7 +92,7 @@ public class PlayerActor(ILogger<PlayerActor> logger,
 
     public async Task<bool> MoveTo(Direction direction)
     {
-        Logger.LogInformation("Player {PlayerName} is attempting to go to direction {Direction}", Player.Name, direction);
+        Logger.LogInformation("Player {PlayerName} wants to move {Direction}", Player.Name, direction);
         var destination = await GrainFactory.GetGrain<IRoomActor>(Player.CurrentRoomId, Player.CurrentZoneName).Move(Player, direction);
         if (destination == null)
         {
@@ -104,6 +104,12 @@ public class PlayerActor(ILogger<PlayerActor> logger,
         var start = Player.GetCurrentLocation();
         Player.SetCurrentLocation(destination.Location);
         await PlayerState.WriteStateAsync();
-        return start == Player.GetCurrentLocation();
+        var success = start != Player.GetCurrentLocation();
+        if (!success)
+        {
+            Logger.LogWarning("Player {PlayerName} tried to move {Direction}, but failed.", Player.Name, direction);
+        }
+        Logger.LogInformation("Player {PlayerName} is now at {Location}", Player.Name, Player.GetCurrentLocation());
+        return success;
     }
 }

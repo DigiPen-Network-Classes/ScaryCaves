@@ -4,27 +4,12 @@ namespace ScaryCavesWeb.Models;
 /// Reflects the state of a Room: players, items, mobs
 /// as seen by a particular player (for their actions)
 /// </summary>
+[GenerateSerializer]
+[Alias("ScaryCavesWeb.Models.RoomState")]
 public class RoomState(Player player, Room room)
 {
+    [Id(0)]
     public Player Player { get; } = player;
+    [Id(1)]
     public Room Room { get; } = room;
-    public List<MobState> Mobs { get; } = room.MobsInRoom.ToList();
-
-    public List<PlayerAction> GetAvailableMovement()
-    {
-        var actions = Room
-            .Exits
-            .Select(exit => new PlayerAction($"GO {exit.Key}", Verb.Go, exit.Key))
-            .ToList();
-
-        // pick up ITEM
-        // Attack Mob
-        // Open door
-        return actions;
-    }
-
-    public bool Attack(string mobInstanceId)
-    {
-        return false; // TODO
-    }
 }

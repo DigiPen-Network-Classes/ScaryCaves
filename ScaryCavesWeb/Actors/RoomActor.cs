@@ -22,8 +22,13 @@ public interface IRoomDefinitionActor : IGrainWithIntegerCompoundKey
 [Alias("ScaryCavesWeb.Actors.IRoomActor")]
 public interface IRoomActor : IGrainWithIntegerCompoundKey
 {
+    /// <summary>
+    /// Get the room, don't include "playerNameAsking" in the list of players in the room.
+    /// </summary>
+    /// <param name="playerNameAsking">this name isn't included in the player list - if null or empty, return full list of players.</param>
+    /// <returns></returns>
     [Alias("GetRoom")]
-    Task<Room> GetRoom();
+    Task<Room> GetRoom(string? playerNameAsking);
 
     [Alias("Enter")]
     Task<Room> Enter(Player player);
@@ -46,14 +51,15 @@ public class RoomActor(ILogger<RoomActor> logger,
     private ILogger<RoomActor> Logger { get; } = logger;
     private IPersistentState<Room> RoomState { get; } = roomState;
 
-    public async Task<Room> GetRoom()
+    public async Task<Room> GetRoom(string? player = null)
     {
         if (!RoomState.RecordExists)
         {
             // we need to reload the room state from the zone
             await Reload();
         }
-        return RoomState.State;
+
+        return RoomState.State.MinusPlayer(player);
     }
 
     public async Task<Room> ReloadFrom(ZoneDefinition zoneDefinition, RoomDefinition roomDefinition)

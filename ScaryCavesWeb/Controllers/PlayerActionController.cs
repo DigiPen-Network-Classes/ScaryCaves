@@ -24,7 +24,7 @@ public class PlayerActionController(
         }
 
         var currentLocation = player.GetCurrentLocation();
-        var room = await GrainFactory.GetGrain<IRoomActor>(currentLocation.RoomId, currentLocation.ZoneName).GetRoom();
+        var room = await GrainFactory.GetGrain<IRoomActor>(currentLocation.RoomId, currentLocation.ZoneName).GetRoom(player.Name);
         return View("RoomView", new RoomState(player, room));
     }
 

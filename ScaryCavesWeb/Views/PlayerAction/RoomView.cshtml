@@ -8,13 +8,13 @@
 <div class="text-center">
     <h1>Room @Model.Room.Id: @Model.Room.Name</h1>
     <p class="room-description">@Model.Room.Description</p>
-    @foreach (var mob in Model.Mobs ?? [])
+    @foreach (var mob in Model.Room.MobsInRoom ?? [])
     {
         <p class="mob-description">@mob.Description</p>
     }
     <p>Some things you could do:</p>
     <ul class="player-actions">
-        @foreach (var action in Model.GetAvailableMovement())
+        @foreach (var action in Model.Room.Exits.Select(e => new { Text = $"Go {e.Key}", ActionName = "/PlayerAction/Move", Verb = "move", Direction = e.Key }))
         {
             <li>
                 <form method="post" action="@action.ActionName">
@@ -24,7 +24,7 @@
                 </form>
             </li>
         }
-        @foreach(var mob in Model.Mobs ?? [])
+        @foreach(var mob in Model.Room.MobsInRoom ?? [])
         {
             <li>
                 <form method="post" action="/PlayerAction/Attack">

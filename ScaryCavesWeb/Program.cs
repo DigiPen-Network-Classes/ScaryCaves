@@ -51,6 +51,9 @@ builder.Host.UseOrleans(static siloBuilder =>
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Strict;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         options.LoginPath = "/Home/Login";
         options.AccessDeniedPath = "/Home/AccessDenied";
         options.ExpireTimeSpan = settings.PlayerExpires;
