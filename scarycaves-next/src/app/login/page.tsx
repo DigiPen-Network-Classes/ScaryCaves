@@ -5,7 +5,7 @@ import { useState } from 'react';
 
 const LoginPage = () => {
     const [playerName, setPlayerName] = useState('');
-    const [password, usePassword] = useState('');
+    const [password, setPassword] = useState('');
     const router = useRouter();
 
     const handleLogin = async (e: React.FormEvent) => {
@@ -20,6 +20,7 @@ const LoginPage = () => {
         });
         if (response.ok) {
             router.push('/scarycave');
+            return;
         } else {
             alert('Login failed');
         }
@@ -36,7 +37,11 @@ const LoginPage = () => {
                 </div>
                 <div className="formGroup">
                     <label>Password:</label>
-                    <input type="password" className="form-control" value={password} onChange={e => usePassword(e.target.value)}/>
+                    <input type="password"
+                           className="form-control"
+                           value={password}
+                           onChange={e => setPassword(e.target.value)}
+                    />
                 </div>
                 <button type="submit" className="btn btn-primary">Login</button>
             </form>

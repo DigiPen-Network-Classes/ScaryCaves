@@ -2,16 +2,18 @@ import React from 'react';
 
 interface OtherPlayersProps {
     players: string[];
+    thisPlayer: string;
 }
 
-const OtherPlayers: React.FC<OtherPlayersProps> = ({ players }) => {
+const OtherPlayers: React.FC<OtherPlayersProps> = ({ players, thisPlayer }) => {
+    const otherPlayers = players.filter(playerName => playerName !== thisPlayer);
     return (
         <>
-            {players.length > 0 && (
+            {otherPlayers.length > 0 && (
                 <div key="other-players" className="other-players">
                     <p>Other Players:</p>
                     <ul>
-                        {players.map((playerName) => (
+                        {otherPlayers.map((playerName) => (
                             <li key={playerName}>{playerName}</li>
                         ))}
                     </ul>

@@ -24,14 +24,6 @@ public interface IRoomDefinitionActor : IGrainWithIntegerCompoundKey
 [Alias("ScaryCavesWeb.Actors.IRoomActor")]
 public interface IRoomActor : IGrainWithIntegerCompoundKey
 {
-    /// <summary>
-    /// Get the room, don't include "playerNameAsking" in the list of players in the room.
-    /// </summary>
-    /// <param name="playerNameAsking">this name isn't included in the player list - if null or empty, return full list of players.</param>
-    /// <returns></returns>
-    [Alias("GetRoom")]
-    Task<Room> GetRoom(string? playerNameAsking);
-
     [Alias("Enter")]
     Task<Room> Enter(Player player);
 
@@ -50,7 +42,7 @@ public class RoomActor(ILogger<RoomActor> logger,
     private IPersistentState<Room> RoomState { get; } = roomState;
     private IHubContext<GameHub> HubContext { get; } = hubContext;
 
-    public async Task<Room> GetRoom(string? player = null)
+    private async Task<Room> GetRoom()
     {
         if (!RoomState.RecordExists)
         {
@@ -58,7 +50,7 @@ public class RoomActor(ILogger<RoomActor> logger,
             await Reload();
         }
 
-        return RoomState.State.MinusPlayer(player);
+        return RoomState.State;
     }
 
     public async Task<Room> ReloadFrom(ZoneDefinition zoneDefinition, RoomDefinition roomDefinition)
@@ -67,7 +59,6 @@ public class RoomActor(ILogger<RoomActor> logger,
         ArgumentOutOfRangeException.ThrowIfNotEqual(roomDefinition.Id, roomId);
         RoomState.State = new Room(zoneName, roomDefinition);
         RoomState.State.ClearMobs();
-        await RoomState.WriteStateAsync();
         foreach (var mob in roomDefinition.InitialMobs)
         {
             var mobDefinition = zoneDefinition.GetMobDefinition(mob.DefinitionId);
@@ -80,6 +71,7 @@ public class RoomActor(ILogger<RoomActor> logger,
             // tell the individual to reload too:
             await GrainFactory.GetGrain<IMobActor>(mob.InstanceId).Reload(zoneName, roomId, mobDefinition);
         }
+        await RoomState.WriteStateAsync();
         return RoomState.State;
     }
 
@@ -89,7 +81,7 @@ public class RoomActor(ILogger<RoomActor> logger,
     /// since the state at this point is not reliable.
     /// </summary>
     /// <returns></returns>
-    public async Task<Room> Reload()
+    private async Task<Room> Reload()
     {
         var myRoomId = this.GetPrimaryKeyLong(out var zoneName);
         var (zoneDefinition, roomDefinition) = await GrainFactory.GetGrain<IZoneDefinitionActor>(zoneName).GetRoomDefinition(myRoomId);
@@ -136,25 +128,27 @@ public class RoomActor(ILogger<RoomActor> logger,
     public async Task<Room> Enter(Player player)
     {
         var room = await GetRoom();
-        foreach (var p in room.PlayersInRoom.Except([player.Name]))
-        {
-            await HubContext.Clients.Client(p).SendAsync("PlayerEntered", player.Name);
-            // TODO also can inform mobs that the player has entered the room (to trigger aggro)
-        }
         room.AddPlayer(player.Name);
         await RoomState.WriteStateAsync();
+
+        Logger.LogInformation("Player {PlayerName} is entering room {RoomId} in zone {ZoneName}", player.Name, room.Id, room.ZoneName);
+        var groupName = room.Location.ToString();
+        await HubContext.Clients.Group(groupName).SendAsync("PlayerEntered", player.Name);
+        await HubContext.Groups.AddToGroupAsync(player.ConnectionId, groupName);
+
         return room;
     }
 
     public async Task<Room> Leave(Player player)
     {
         var room = await GetRoom();
-        foreach (var p in room.PlayersInRoom.Except([player.Name]))
-        {
-            await HubContext.Clients.Client(p).SendAsync("PlayerLeft", player.Name);
-        }
+
         room.RemovePlayer(player.Name);
         await RoomState.WriteStateAsync();
+        Logger.LogInformation("Player {PlayerName} is leaving room {RoomId} in zone {ZoneName}", player.Name, room.Id, room.ZoneName);
+        var groupName = room.Location.ToString();
+        await hubContext.Groups.RemoveFromGroupAsync(player.ConnectionId, groupName);
+        await hubContext.Clients.Group(groupName).SendAsync("PlayerLeft", player.Name);
         return room;
     }
 }

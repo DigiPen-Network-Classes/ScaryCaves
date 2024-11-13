@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
 import { RoomState } from '../../types/RoomState';
 import MobList  from '../../components/MobList';
@@ -8,82 +8,104 @@ import OtherPlayers from '../../components/OtherPlayers';
 import RoomExits  from '../../components/RoomExits';
 import PlayerStats from '../../components/PlayerStats';
 
-const RoomView : React.FC = () => {
+const RoomPage : React.FC = () => {
     const router = useRouter();
     const [roomState, setRoomState] = useState<RoomState | null>(null);
-    const [connection, setConnection] = useState<HubConnection | null>(null);
+    // useRef to only create this once
+    const connectionRef = useRef<HubConnection | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [messages, setMessages] = useState<string[]>([]);
 
     useEffect(() => {
-        // initialize SignalR connection
-        const connectSignalR = async () => {
+        // initialize SignalR connection, if authorized
+        if (!connectionRef.current) {
+            // only once
             const connection = new HubConnectionBuilder()
-                .withUrl("http://localhost:8000/gameHub", {
-                    withCredentials: true, // cookies in request
-                })
+                .withUrl("http://localhost:8000/GameHub", {withCredentials: true})
                 .withAutomaticReconnect()
                 .build();
+            connectionRef.current = connection;
 
-            connection.onclose((error) => {
-                router.push('/login');
-            });
-
-            connection.on("UpdateRoomState", (newRoomState: RoomState) => {
-                setRoomState(newRoomState); // update when data is received
-                setError(null); // clear error
-            });
-
-            // TODO move failed?
-
-            connection.on("PlayerEntered", (playerName: string) => {
-                setMessages(prevMessages => [...prevMessages, `${playerName} has entered the room.`]);
-                setRoomState(prevState => {
-                    if (!prevState) return null;
-                    return {
-                        ...prevState,
-                        room: {
-                            ...prevState.room,
-                            playersInRoom: [...prevState.room.playersInRoom, playerName],
-                        }
-                    };
+            const printMessage = (message: string) => {
+                setMessages(prevMessages => {
+                    const timestamp = new Date().toLocaleTimeString("en-GB");
+                    const completeMessage = `${message} (${timestamp})`;
+                    return [completeMessage, ...prevMessages].slice(0, 10);
                 });
-            });
+            };
 
-            connection.on("PlayerLeft", (playerName: string) => {
-                setMessages(prevMessages => [...prevMessages, `${playerName} has left the room.`]);
-                setRoomState(prevState => {
-                    if (!prevState) return null;
-                    return {
-                        ...prevState,
-                        room: {
-                            ...prevState.room,
-                            playersInRoom: prevState.room.playersInRoom.filter(p => p !== playerName),
-                        }
-                    };
-                });
-            });
+            const startConnection = async () => {
+                // see if we are already authenticated - if not redirect without connection attempt
+                try {
+                    console.log("Check Status to see if we are logged in");
+                    const statusResponse = await fetch('http://localhost:8000/Home/Status', {credentials: 'include'});
+                    if (!statusResponse.ok) {
+                        console.log("Not logged in, redirecting to login");
+                        router.push('/login');
+                        return;
+                    }
 
-            connection.on("ReceiveMessage", (message: string) => {
-                console.log("ReceiveMessage: ", message);
-            });
+                    connection.onclose((error) => {
+                        console.log("connection.onclose: ", error);
+                        router.push('/login');
+                    });
 
-            try {
-                await connection.start();
-                setConnection(connection);
-            } catch (error) {
-                router.push('/login');
-            }
+                    connection.on("UpdateRoomState", (newRoomState: RoomState) => {
+                        console.log("UpdateRoomState received: ", newRoomState);
+                        setRoomState(newRoomState); // update when data is received
+                        setError(null); // clear error
+                        setMessages([]); // clear messages
+                    });
+
+                    connection.on("PlayerEntered", (playerName: string) => {
+                        console.log("PlayerEntered received: ", playerName);
+                        printMessage(`${playerName} has entered the room.`);
+                        setRoomState(prevState => {
+                            if (!prevState) return null;
+                            return {
+                                ...prevState,
+                                room: {
+                                    ...prevState.room,
+                                    playersInRoom: [...prevState.room.playersInRoom, playerName],
+                                }
+                            };
+                        });
+                    });
+
+                    connection.on("PlayerLeft", (playerName: string) => {
+                        console.log("PlayerLeft received: ", playerName);
+                        printMessage(`${playerName} has left the room.`);
+
+                        setRoomState(prevState => {
+                            if (!prevState) return null;
+                            return {
+                                ...prevState,
+                                room: {
+                                    ...prevState.room,
+                                    playersInRoom: prevState.room.playersInRoom.filter(p => p !== playerName),
+                                }
+                            };
+                        });
+                    });
+
+                    connection.on("ReceiveMessage", (message: string) => {
+                        console.log("Message: ", message);
+                    });
+
+                    await connection.start();
+                } catch (error) {
+                    console.error(`Connection failure: ${error}`);
+                    router.push('/login');
+                }
+            };
+            startConnection();
+        }
+
+        return () => {
+            // cleanup
+            connectionRef.current?.stop().then(() => console.log("Connection stopped"));
         };
-
-        connectSignalR();
-
-    return () => {
-            if (connection) {
-                connection.stop();
-            }
-        };
-    }, []);
+    }, [router]);
 
     if (!roomState) {
         return <div>Loading...</div>;
@@ -96,10 +118,11 @@ const RoomView : React.FC = () => {
             {error && <div className="alert alert-danger">{error}</div>}
 
             <MobList mobs={roomState.room.mobsInRoom} />
-            <OtherPlayers players={roomState.room.playersInRoom} />
+
+            <OtherPlayers players={roomState.room.playersInRoom} thisPlayer={roomState.player.name} />
 
             <p className="player-action">Some things you might do:</p>
-            <RoomExits roomState={roomState} connection={connection} />
+            <RoomExits roomState={roomState} connection={connectionRef.current} />
 
             <div className="messages">
                 {messages.map((msg, index) => (
@@ -112,4 +135,4 @@ const RoomView : React.FC = () => {
     );
 };
 
-export default RoomView;
+export default RoomPage;

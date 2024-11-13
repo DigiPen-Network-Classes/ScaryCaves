@@ -44,17 +44,16 @@ public class AccountActor(
         return Account;
     }
 
-    public async Task<Account?> Login()
+    public Task<Account?> Login()
     {
         if (!AccountState.RecordExists)
         {
             Logger.LogError("Account {AccountId} does not have any state, account not found", this.GetPrimaryKey());
-            return null;
+            return Task.FromResult<Account?>(null);
         }
 
         Logger.LogInformation("Welcome Login Account {AccountId} - {AccountName}", this.GetPrimaryKey(), Account.PlayerName);
-        await GrainFactory.GetGrain<IPlayerActor>(Account.PlayerName).BeginSession();
-        return Account;
+        return Task.FromResult<Account?>(Account);
     }
     public async Task Logout()
     {

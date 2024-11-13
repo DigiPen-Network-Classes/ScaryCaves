@@ -53,7 +53,7 @@ public class HomeController(
         var g = AccountId;
         if (g != null)
         {
-            await ClusterClient.GetGrain<IAccountActor>(AccountId ?? Guid.Empty).Logout();
+            await ClusterClient.GetGrain<IAccountActor>(g.Value).Logout();
         }
 
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
@@ -88,6 +88,15 @@ public class HomeController(
     {
         await ClusterClient.GetGrain<IPlayerActor>(PlayerName).StartOver();
         return Ok();
+    }
+
+    public IActionResult Status()
+    {
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            return Ok();
+        }
+        return Unauthorized();
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

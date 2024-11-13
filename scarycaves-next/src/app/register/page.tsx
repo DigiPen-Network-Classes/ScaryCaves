@@ -5,7 +5,7 @@ import { useState } from 'react';
 
 const RegisterPage = () => {
     const [playerName, setPlayerName] = useState('');
-    const [password, usePassword] = useState('');
+    const [password, setPassword] = useState('');
     const router = useRouter();
 
     const handleRegister = async (e: React.FormEvent) => {
@@ -36,7 +36,11 @@ const RegisterPage = () => {
                 </div>
                 <div className="formGroup">
                     <label>Password:</label>
-                    <input type="password" className="form-control" value={password} onChange={e => usePassword(e.target.value)}/>
+                    <input type="password"
+                           className="form-control"
+                           value={password}
+                           onChange={e => setPassword(e.target.value)}
+                    />
                 </div>
                 <button type="submit" className="btn btn-primary">Create Player</button>
             </form>

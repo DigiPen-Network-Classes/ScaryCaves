@@ -17,7 +17,7 @@ const RoomExits: React.FC<RoomExitsProps> = ({ roomState, connection }) => {
 
     return (
         <ul className="player-action">
-            {Object.entries(roomState.room.exits).map(([direction, roomId]) => (
+            {Object.entries(roomState.room.exits).map(([direction]) => (
                 <li key={direction} className="player-action">
                     <button
                         type="button"

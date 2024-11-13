@@ -14,8 +14,14 @@ public class Player
     [Id(2)] public string CurrentZoneName { get; set; }
     [Id(3)] public Guid OwnerAccountId { get; set; }
 
+    /// <summary>
+    /// SignalR Connection ID, updated on reconnect
+    /// </summary>
+    [Id(4)]
+    public string ConnectionId { get; set; }
+
     [JsonConstructor]
-    public Player(Guid ownerAccountId, string name, long currentRoomId, string currentZoneName)
+    public Player(Guid ownerAccountId, string name, long currentRoomId, string currentZoneName, string? connectionId)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(ownerAccountId, Guid.Empty);
         ArgumentException.ThrowIfNullOrEmpty(name);
@@ -23,6 +29,7 @@ public class Player
         Name = name;
         CurrentRoomId = currentRoomId;
         CurrentZoneName = currentZoneName;
+        ConnectionId = connectionId ?? "";
     }
 
     public Location GetCurrentLocation() => new(CurrentRoomId, CurrentZoneName);

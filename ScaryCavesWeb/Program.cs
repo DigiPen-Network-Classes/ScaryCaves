@@ -10,9 +10,8 @@ var settings = new ScaryCaveSettings();
 builder.Configuration.Bind("ScaryCaves", settings);
 builder.Services.AddSingleton(settings);
 
-// redis connection
+// redis connection - used for accounts (until we move it to mongodb)
 var redisConnectionString = builder.Configuration.GetSection("Redis:ConnectionString").Value;
-// TODO remove this when orleans state works ...
 var redisConn = ConnectionMultiplexer.Connect(redisConnectionString!);
 builder.Services.AddSingleton<IConnectionMultiplexer>(redisConn);
 builder.Services.AddScoped<IDatabase>(sp => sp.GetRequiredService<IConnectionMultiplexer>().GetDatabase());
@@ -20,6 +19,7 @@ builder.Services.AddScoped<IDatabase>(sp => sp.GetRequiredService<IConnectionMul
 builder.Host.UseOrleans(static siloBuilder =>
 {
     siloBuilder.UseLocalhostClustering();
+    // everything else is stored in redis
     siloBuilder.AddRedisGrainStorageAsDefault(options =>
     {
         options.ConfigurationOptions = new ConfigurationOptions
@@ -41,7 +41,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.SameSite = SameSiteMode.Strict;
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         options.LoginPath = "/Home/Login";
-        options.AccessDeniedPath = "/Home/AccessDenied";
+        options.AccessDeniedPath = "/Home/Login";
         options.ExpireTimeSpan = settings.PlayerExpires;
     });
 builder.Services.AddAuthorization();
@@ -80,16 +80,12 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowReactApp");
-
 app.UseHttpsRedirection();
-app.UseStaticFiles();
-
 app.UseRouting();
-
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapHub<GameHub>("/gamehub");
+app.MapHub<GameHub>("/GameHub");
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
