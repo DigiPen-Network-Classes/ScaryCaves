@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.SignalR;
+using ScaryCavesWeb.Hubs;
 using ScaryCavesWeb.Models;
 
 namespace ScaryCavesWeb.Actors;
@@ -40,16 +42,13 @@ public interface IRoomActor : IGrainWithIntegerCompoundKey
     Task<Room?> Move(Player player, Direction direction);
 }
 
-/// <summary>
-/// TODO Add pubsub for entering, leaving rooms
-/// TODO add mobs to rooms
-/// TODO Add TTL to state: if we notice our state has b een cleaned up, retrieve a new copy from world database
-/// </summary>
 public class RoomActor(ILogger<RoomActor> logger,
-    [PersistentState(nameof(Room))] IPersistentState<Room> roomState) : Grain, IRoomActor, IRoomDefinitionActor
+    [PersistentState(nameof(Room))] IPersistentState<Room> roomState,
+    IHubContext<GameHub> hubContext) : Grain, IRoomActor, IRoomDefinitionActor
 {
     private ILogger<RoomActor> Logger { get; } = logger;
     private IPersistentState<Room> RoomState { get; } = roomState;
+    private IHubContext<GameHub> HubContext { get; } = hubContext;
 
     public async Task<Room> GetRoom(string? player = null)
     {
@@ -137,6 +136,11 @@ public class RoomActor(ILogger<RoomActor> logger,
     public async Task<Room> Enter(Player player)
     {
         var room = await GetRoom();
+        foreach (var p in room.PlayersInRoom.Except([player.Name]))
+        {
+            await HubContext.Clients.Client(p).SendAsync("PlayerEntered", player.Name);
+            // TODO also can inform mobs that the player has entered the room (to trigger aggro)
+        }
         room.AddPlayer(player.Name);
         await RoomState.WriteStateAsync();
         return room;
@@ -145,6 +149,10 @@ public class RoomActor(ILogger<RoomActor> logger,
     public async Task<Room> Leave(Player player)
     {
         var room = await GetRoom();
+        foreach (var p in room.PlayersInRoom.Except([player.Name]))
+        {
+            await HubContext.Clients.Client(p).SendAsync("PlayerLeft", player.Name);
+        }
         room.RemovePlayer(player.Name);
         await RoomState.WriteStateAsync();
         return room;

@@ -69,7 +69,6 @@ public class GameHub(ILogger<GameHub> logger, IClusterClient clusterClient) : Hu
         {
             Logger.LogError("Failed to retrieve player for {Account}/{PlayerName}", AccountId, PlayerName);
             await Clients.Caller.SendAsync("ReceiveMessage", "You must be logged in to be in the Scary Cave! (Player not found)");
-            // TODO disconnect?
             return;
         }
         var room = await GetRoom(player.GetCurrentLocation());
@@ -79,7 +78,6 @@ public class GameHub(ILogger<GameHub> logger, IClusterClient clusterClient) : Hu
             await Clients.Caller.SendAsync("ReceiveMessage", "You must be logged in to be in the Scary Cave! (Room not found)");
             return;
         }
-
         await Clients.Caller.SendAsync("UpdateRoomState", new RoomState(player, room));
 
         await base.OnConnectedAsync();

@@ -55,9 +55,10 @@ public class PlayerActor(ILogger<PlayerActor> logger,
         await GrainFactory.GetGrain<IRoomActor>(location.RoomId, location.ZoneName).Enter(Player);
     }
 
-    public Task EndSession()
+    public async Task EndSession()
     {
-        return Task.CompletedTask;
+        var location = Player.GetCurrentLocation();
+        await GrainFactory.GetGrain<IRoomActor>(location.RoomId, location.ZoneName).Leave(Player);
     }
 
     public Task<Player> Get()
@@ -69,13 +70,11 @@ public class PlayerActor(ILogger<PlayerActor> logger,
     {
         // TODO reset player stats (hp, etc)
         // TODO reset player inventory
-        // TODO reset player location
         return await TeleportTo(Settings.DefaultRoomId, Settings.DefaultZoneName);
     }
 
     public async Task<bool> TeleportTo(long roomId, string zoneName)
     {
-        // TODO permissions, etc.
         var location = new Location(roomId, zoneName);
         if (location == Player.GetCurrentLocation())
         {
