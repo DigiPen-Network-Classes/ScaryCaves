@@ -125,3 +125,9 @@ p.mob-description {
 .other-players {
   margin-bottom: .80rem;
 }
+
+ul.tech-list {
+  list-style-type: circle;
+  padding-left: 1rem;
+  margin-left: 1rem;
+}

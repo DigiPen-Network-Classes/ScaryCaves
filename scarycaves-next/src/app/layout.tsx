@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import "bootstrap/dist/css/bootstrap.css";
 import "./globals.css";
 import BootstrapClient from '@/components/BootstrapClient';
-import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 
 export const metadata: Metadata = {
