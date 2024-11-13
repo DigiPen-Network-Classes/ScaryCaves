@@ -6,6 +6,7 @@ import { RoomState } from '../../types/RoomState';
 import MobList  from '../../components/MobList';
 import OtherPlayers from '../../components/OtherPlayers';
 import RoomExits  from '../../components/RoomExits';
+import PlayerStats from '../../components/PlayerStats';
 
 const RoomView : React.FC = () => {
     const router = useRouter();
@@ -64,6 +65,8 @@ const RoomView : React.FC = () => {
 
             <p className="player-action">Some things you might do:</p>
             <RoomExits roomState={roomState} connection={connection} />
+
+            <PlayerStats playerState={roomState.player}/>
         </div>
     );
 };

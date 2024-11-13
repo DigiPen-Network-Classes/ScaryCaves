@@ -1,7 +1,6 @@
 import React from 'react';
 import { RoomState } from '../types/RoomState';
 import { HubConnection } from '@microsoft/signalr';
-import {Dir} from "node:fs";
 
 interface RoomExitsProps {
     roomState: RoomState;

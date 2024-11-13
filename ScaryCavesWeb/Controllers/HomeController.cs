@@ -21,20 +21,17 @@ public class HomeController(
 {
     private IAccountSession AccountSession { get; } = accountSession;
 
-    public IActionResult Index()
-    {
-        return View();
-    }
-
-    [HttpGet]
-    public IActionResult Login()
-    {
-        return View();
-    }
-
     [HttpPost]
     public async Task<IActionResult> Login([FromBody] LoginModel model)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest();
+        }
+        if (string.IsNullOrEmpty(model.PlayerName) || string.IsNullOrEmpty(model.Password))
+        {
+            return BadRequest();
+        }
         Logger.LogDebug("login attempt for {PlayerName}", model.PlayerName);
         var account = await AccountSession.Login(model.PlayerName, model.Password);
         if (account == null)
@@ -65,24 +62,25 @@ public class HomeController(
         return Unauthorized();
     }
 
-    [HttpGet]
-    public IActionResult Register()
-    {
-        return View();
-    }
-
     [HttpPost]
-    public async Task<IActionResult> Register(string playerName, string password)
+    public async Task<IActionResult> Register([FromBody] RegisterModel model)
     {
-        Logger.LogDebug("register new player: {PlayerName}", playerName);
-        var account =  await AccountSession.Register(playerName, password);
+        if (!ModelState.IsValid)
+        {
+            return BadRequest();
+        }
+        if (string.IsNullOrEmpty(model.PlayerName) || string.IsNullOrEmpty(model.Password))
+        {
+            return BadRequest();
+        }
+        Logger.LogDebug("register new player: {PlayerName}", model.PlayerName);
+        var account =  await AccountSession.Register(model.PlayerName, model.Password);
         if (account == null)
         {
-            ViewBag.ErrorMessage = "Cannot use that name.";
-            return View();
+            return BadRequest();
         }
         await HttpContext.ScaryCaveSignIn(account, DateTime.UtcNow.Add(Settings.PlayerExpires));
-        return RedirectToRoom();
+        return Ok();
     }
 
     [Authorize]
@@ -91,13 +89,6 @@ public class HomeController(
         await GrainFactory.GetGrain<IPlayerActor>(PlayerName).StartOver();
         return Ok();
     }
-
-    public IActionResult Enter()
-    {
-        // let us begin!
-        return RedirectToRoom();
-    }
-
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
