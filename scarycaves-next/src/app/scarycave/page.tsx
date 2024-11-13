@@ -1,5 +1,5 @@
 "use client";
-
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
 import { RoomState } from '../../types/RoomState';
@@ -8,6 +8,7 @@ import OtherPlayers from '../../components/OtherPlayers';
 import RoomExits  from '../../components/RoomExits';
 
 const RoomView : React.FC = () => {
+    const router = useRouter();
     const [roomState, setRoomState] = useState<RoomState | null>(null);
     const [connection, setConnection] = useState<HubConnection | null>(null);
 
@@ -15,9 +16,15 @@ const RoomView : React.FC = () => {
         // initialize SignalR connection
         const connectSignalR = async () => {
             const connection = new HubConnectionBuilder()
-                .withUrl("http://localhost:8000/gameHub")
+                .withUrl("http://localhost:8000/gameHub", {
+                    withCredentials: true, // cookies in request
+                })
                 .withAutomaticReconnect()
                 .build();
+
+            connection.onclose((error) => {
+                router.push('/login');
+            });
 
             connection.on("UpdateRoomState", (newRoomState: RoomState) => {
                 setRoomState(newRoomState); // update when data is received
@@ -27,8 +34,12 @@ const RoomView : React.FC = () => {
                 console.log("ReceiveMessage: ", message);
             });
 
-            await connection.start();
-            setConnection(connection);
+            try {
+                await connection.start();
+                setConnection(connection);
+            } catch (error) {
+                router.push('/login');
+            }
         };
 
         connectSignalR();

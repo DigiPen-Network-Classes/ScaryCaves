@@ -1,10 +1,12 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using ScaryCavesWeb.Actors;
 using ScaryCavesWeb.Models;
 
 namespace ScaryCavesWeb.Hubs;
 
+[Authorize]
 public class GameHub(ILogger<GameHub> logger, IClusterClient clusterClient) : Hub
 {
     private ILogger<GameHub> Logger { get; } = logger;

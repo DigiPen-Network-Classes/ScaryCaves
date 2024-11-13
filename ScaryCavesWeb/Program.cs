@@ -133,7 +133,7 @@ app.MapHub<GameHub>("/gamehub");
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-
+/*
 app.UseSpa(spa =>
 {
     spa.Options.SourcePath = "scarycaves-spa";
@@ -143,4 +143,5 @@ app.UseSpa(spa =>
         //spa.UseReactDevelopmentServer(npmScript: "start");
     }
 });
+*/
 app.Run();

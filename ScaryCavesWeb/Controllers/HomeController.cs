@@ -33,19 +33,18 @@ public class HomeController(
     }
 
     [HttpPost]
-    public async Task<IActionResult> Login(string playerName, string password)
+    public async Task<IActionResult> Login([FromBody] LoginModel model)
     {
-        Logger.LogDebug("login attempt for {PlayerName}", playerName);
-        var account = await AccountSession.Login(playerName, password);
+        Logger.LogDebug("login attempt for {PlayerName}", model.PlayerName);
+        var account = await AccountSession.Login(model.PlayerName, model.Password);
         if (account == null)
         {
-            ViewBag.ErrorMessage = "Invalid login attempt";
-            return View();
+            return Unauthorized();
         }
 
         // create the auth cookie
         await HttpContext.ScaryCaveSignIn(account, DateTime.UtcNow.Add(Settings.PlayerExpires));
-        return RedirectToRoom();
+        return Ok();
     }
 
     public async Task<IActionResult> Logout()
@@ -57,13 +56,13 @@ public class HomeController(
         }
 
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        return RedirectToAction("Index");
+        return Ok();
     }
 
     public IActionResult AccessDenied()
     {
         Logger.LogError("Access denied");
-        return RedirectToAction("Index");
+        return Unauthorized();
     }
 
     [HttpGet]
