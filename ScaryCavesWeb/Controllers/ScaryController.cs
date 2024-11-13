@@ -17,7 +17,6 @@ public abstract class ScaryController(ILogger<ScaryController> logger, ScaryCave
     protected Guid? AccountId => User.FindFirst(ClaimTypes.NameIdentifier) is { Value: string id } ? Guid.Parse(id) : null;
     protected RedirectResult RedirectToRoom()
     {
-        //return RedirectToAction("Room", "PlayerAction");
         return Redirect("http://localhost:3000/");
     }
 

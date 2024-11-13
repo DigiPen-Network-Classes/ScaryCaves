@@ -88,8 +88,8 @@ public class HomeController(
     [Authorize]
     public async Task<IActionResult> StartOver()
     {
-        var success = await GrainFactory.GetGrain<IPlayerActor>(PlayerName).StartOver();
-        return success ? RedirectToRoom() : RedirectToAction("Login");
+        await GrainFactory.GetGrain<IPlayerActor>(PlayerName).StartOver();
+        return Ok();
     }
 
     public IActionResult Enter()
