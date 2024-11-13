@@ -17,17 +17,6 @@ var redisConn = ConnectionMultiplexer.Connect(redisConnectionString!);
 builder.Services.AddSingleton<IConnectionMultiplexer>(redisConn);
 builder.Services.AddScoped<IDatabase>(sp => sp.GetRequiredService<IConnectionMultiplexer>().GetDatabase());
 
-
-// orleans configuration
-// dev: just use local everything for now
-// use redis for persistence
-/*
-var redisOptions = new ConfigurationOptions
-{
-    EndPoints = { redisConnectionString! },
-    AbortOnConnectFail = false,
-};
-*/
 builder.Host.UseOrleans(static siloBuilder =>
 {
     siloBuilder.UseLocalhostClustering();
@@ -42,7 +31,6 @@ builder.Host.UseOrleans(static siloBuilder =>
             AbortOnConnectFail = false,
         };
     });
-    //siloBuilder.AddMemoryGrainStorage("ScaryCaves");
 });
 
 // simple cookie authentication
