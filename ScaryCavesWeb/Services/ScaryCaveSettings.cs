@@ -1,4 +1,3 @@
-using ScaryCavesWeb.Models;
 
 namespace ScaryCavesWeb.Services;
 
@@ -15,10 +14,4 @@ public class ScaryCaveSettings
     /// After this point they are deleted, so auth should be tied to this too.
     /// </summary>
     public TimeSpan PlayerExpires => TimeSpan.FromSeconds(DefaultTimeToLive ?? defaultSeconds);
-
-    /// <summary>
-    /// How long to accounts stay around?
-    /// See PlayerExpires
-    /// </summary>
-    public TimeSpan AccountExpires => TimeSpan.FromSeconds(DefaultTimeToLive ?? defaultSeconds);
 }

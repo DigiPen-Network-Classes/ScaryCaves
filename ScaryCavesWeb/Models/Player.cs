@@ -1,4 +1,3 @@
-
 using Newtonsoft.Json;
 
 namespace ScaryCavesWeb.Models;
@@ -46,33 +45,4 @@ public class Player
         // determine that we've deserialized this into a valid state:
         return !string.IsNullOrEmpty(Name) && OwnerAccountId != Guid.Empty && OwnerAccountId == ownerAccountId;
     }
-}
-
-public enum Verb
-{
-    Go,
-}
-
-public enum Direction
-{
-    North,
-    East,
-    South,
-    West,
-    Up,
-    Down
-}
-
-public class PlayerAction(string text, Verb v, Direction? direction)
-{
-    public string Text { get; } = text;
-    public Verb Verb { get; } = v;
-    public Direction? Direction { get; } = direction;
-
-    public string ActionName =>
-        Verb switch
-        {
-            Verb.Go => "/PlayerAction/MoveTo",
-            _ => throw new ArgumentOutOfRangeException()
-        };
 }

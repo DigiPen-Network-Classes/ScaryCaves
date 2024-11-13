@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -11,28 +12,31 @@ using ScaryCavesWeb.Services.Authentication;
 namespace ScaryCavesWeb.Controllers;
 
 /// <summary>
-/// TODO: replace auth with oauth/google
+/// TODO: add auth with oauth/google
+/// TODO: add captcha to register / login
 /// </summary>
 public class HomeController(
     ILogger<HomeController> logger,
     ScaryCaveSettings settings,
-    IGrainFactory grainFactory,
-    IAccountSession accountSession) : ScaryController(logger, settings, grainFactory)
+    IClusterClient clusterClient,
+    IAccountSession accountSession) : Controller
 {
     private IAccountSession AccountSession { get; } = accountSession;
+    private ILogger<HomeController> Logger { get; } = logger;
+    private ScaryCaveSettings Settings { get; } = settings;
+    private IClusterClient ClusterClient { get; } = clusterClient;
+
+    private string? PlayerName =>  User.FindFirst(ClaimTypes.Name)?.Value;
+    private Guid? AccountId => User.FindFirst(ClaimTypes.NameIdentifier) is { Value: { } id } ? Guid.Parse(id) : null;
 
     [HttpPost]
     public async Task<IActionResult> Login([FromBody] LoginModel model)
     {
-        if (!ModelState.IsValid)
+        if (!ModelState.IsValid || string.IsNullOrEmpty(model.PlayerName) || string.IsNullOrEmpty(model.Password))
         {
             return BadRequest();
         }
-        if (string.IsNullOrEmpty(model.PlayerName) || string.IsNullOrEmpty(model.Password))
-        {
-            return BadRequest();
-        }
-        Logger.LogDebug("login attempt for {PlayerName}", model.PlayerName);
+        Logger.LogDebug("login attempt for '{PlayerName}'", model.PlayerName);
         var account = await AccountSession.Login(model.PlayerName, model.Password);
         if (account == null)
         {
@@ -49,7 +53,7 @@ public class HomeController(
         var g = AccountId;
         if (g != null)
         {
-            await GrainFactory.GetGrain<IAccountActor>(AccountId ?? Guid.Empty).Logout();
+            await ClusterClient.GetGrain<IAccountActor>(AccountId ?? Guid.Empty).Logout();
         }
 
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
@@ -65,15 +69,11 @@ public class HomeController(
     [HttpPost]
     public async Task<IActionResult> Register([FromBody] RegisterModel model)
     {
-        if (!ModelState.IsValid)
+        if (!ModelState.IsValid || string.IsNullOrEmpty(model.PlayerName) || string.IsNullOrEmpty(model.Password))
         {
             return BadRequest();
         }
-        if (string.IsNullOrEmpty(model.PlayerName) || string.IsNullOrEmpty(model.Password))
-        {
-            return BadRequest();
-        }
-        Logger.LogDebug("register new player: {PlayerName}", model.PlayerName);
+        Logger.LogDebug("Register new player: '{PlayerName}'", model.PlayerName);
         var account =  await AccountSession.Register(model.PlayerName, model.Password);
         if (account == null)
         {
@@ -86,7 +86,7 @@ public class HomeController(
     [Authorize]
     public async Task<IActionResult> StartOver()
     {
-        await GrainFactory.GetGrain<IPlayerActor>(PlayerName).StartOver();
+        await ClusterClient.GetGrain<IPlayerActor>(PlayerName).StartOver();
         return Ok();
     }
 

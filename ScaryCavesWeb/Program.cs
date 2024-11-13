@@ -1,6 +1,4 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
-using ScaryCavesWeb.Controllers;
 using ScaryCavesWeb.Hubs;
 using ScaryCavesWeb.Services;
 using StackExchange.Redis;
@@ -103,45 +101,9 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// TODO remove this?
-// WebSockets support
-var wsOptions = new WebSocketOptions
-{
-    KeepAliveInterval = TimeSpan.FromMinutes(2)
-};
-app.UseWebSockets(wsOptions);
-app.Use(async (context, next) =>
-{
-    if (context.Request.Path == "/ws")
-    {
-        if (context.WebSockets.IsWebSocketRequest)
-        {
-            var ws = await context.WebSockets.AcceptWebSocketAsync();
-            await WebSocketHandler.HandleWebSocketAsync(context, ws);
-        }
-        else
-        {
-            context.Response.StatusCode = 400;
-        }
-    }
-    else
-    {
-        await next();
-    }
-});
 app.MapHub<GameHub>("/gamehub");
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-/*
-app.UseSpa(spa =>
-{
-    spa.Options.SourcePath = "scarycaves-spa";
 
-    if (app.Environment.IsDevelopment())
-    {
-        //spa.UseReactDevelopmentServer(npmScript: "start");
-    }
-});
-*/
 app.Run();
