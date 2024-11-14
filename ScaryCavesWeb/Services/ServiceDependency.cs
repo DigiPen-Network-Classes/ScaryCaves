@@ -1,5 +1,6 @@
 
 using System.Security.Claims;
+using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
@@ -13,6 +14,9 @@ public static class ServiceDependency
 {
     public static IServiceCollection AddScaryCaveWeb(this IServiceCollection services)
     {
+        services.AddSingleton(RandomNumberGenerator.Create());
+        services.AddSingleton<IRandomService, RandomService>();
+
         // authentication
         services.AddSingleton<IAccountSession, AccountSession>();
         services.AddSingleton<IPasswordHasher<Account>, PasswordHasher<Account>>();

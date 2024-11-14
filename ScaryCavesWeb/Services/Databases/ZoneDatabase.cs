@@ -1,5 +1,5 @@
 using System.Reflection;
-using System.Text.Json;
+using Newtonsoft.Json;
 using ScaryCavesWeb.Models;
 
 namespace ScaryCavesWeb.Services.Databases;
@@ -29,7 +29,7 @@ public class ZoneDatabase(List<ZoneDefinition> zones) : IZoneDatabase
         }
         using var reader = new StreamReader(stream);
         var json = reader.ReadToEnd();
-        var zone = JsonSerializer.Deserialize<ZoneDefinition>(json);
+        var zone = JsonConvert.DeserializeObject<ZoneDefinition>(json);
         if (zone?.Name == null || zone.Rooms == null || zone.Mobs == null)
         {
             throw new Exception("deserialization of scary-cave.json failed");

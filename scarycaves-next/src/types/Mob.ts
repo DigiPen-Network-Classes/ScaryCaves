@@ -1,4 +1,4 @@
-export interface MobState {
+export interface Mob {
     instanceId: string;
     definitionId: string;
     name: string;

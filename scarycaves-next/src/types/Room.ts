@@ -1,11 +1,11 @@
-import { MobState } from './MobState';
+import { Mob } from './Mob';
 
 export interface Room {
     id: number;
     name: string;
     description: string;
-    exits: Record<string, number>; // using string keys to represent Direction
-    playersInRoom: string[]; // list of players in the room
+    exits: string[]; // list of Directions
+    playersInRoom: string[];
     zoneName: string;
-    mobsInRoom: MobState[]; // array of mobs in the room (TODO defined later)
+    mobsInRoom: Mob[];
 }

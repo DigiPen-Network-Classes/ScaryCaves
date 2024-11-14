@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+using ScaryCavesWeb.Actors.Extensions;
 using ScaryCavesWeb.Models;
 
 namespace ScaryCavesWeb.Actors;
@@ -18,9 +20,11 @@ public interface IZoneDefinitionActor : IGrainWithStringKey
 public class ZoneActor(ILogger<ZoneActor> logger,
     [PersistentState(nameof(ZoneDefinition))] IPersistentState<ZoneDefinition> zoneDefinitionState): Grain, IZoneDefinitionActor
 {
+
     private ILogger<ZoneActor> Logger { get; } = logger;
     private IPersistentState<ZoneDefinition> ZoneDefinitionState { get; } = zoneDefinitionState;
     private ZoneDefinition ZoneDefinition => ZoneDefinitionState.State;
+
 
     public async Task<(ZoneDefinition, RoomDefinition?)> GetRoomDefinition(long roomId)
     {

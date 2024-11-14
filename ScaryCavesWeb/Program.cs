@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using ScaryCavesWeb.Hubs;
 using ScaryCavesWeb.Services;
@@ -18,6 +19,19 @@ builder.Services.AddScoped<IDatabase>(sp => sp.GetRequiredService<IConnectionMul
 
 builder.Host.UseOrleans(static siloBuilder =>
 {
+    // orleans configures its own logging:
+    siloBuilder.ConfigureLogging(logging =>
+    {
+        logging.ClearProviders();
+        logging.SetMinimumLevel(LogLevel.Information);
+        logging.AddSimpleConsole(options =>
+        {
+            options.UseUtcTimestamp = true;
+            options.IncludeScopes = true;
+            options.TimestampFormat = "yyyy-MM-ddTHH:mm:ss.fffZ "; // UTC timestamp format
+        });
+    });
+
     siloBuilder.UseLocalhostClustering();
     // everything else is stored in redis
     siloBuilder.AddRedisGrainStorageAsDefault(options =>
@@ -50,7 +64,12 @@ builder.Services.AddAuthorization();
 builder.Services.AddScaryCaveWeb();
 
 // signalR
-builder.Services.AddSignalR();
+builder.Services.AddSignalR()
+    .AddJsonProtocol(options =>
+    {
+        // send enums as strings
+        options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 
 // cors for scarycave-spa
 builder.Services.AddCors(options =>

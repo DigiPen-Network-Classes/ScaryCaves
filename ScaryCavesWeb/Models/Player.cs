@@ -7,7 +7,7 @@ namespace ScaryCavesWeb.Models;
 /// </summary>
 [GenerateSerializer]
 [Alias("ScaryCavesWeb.Models.Player")]
-public class Player
+public class Player : IMobile
 {
     [Id(0)] public string Name { get; set; }
     [Id(1)] public long CurrentRoomId { get; set; }
@@ -19,6 +19,8 @@ public class Player
     /// </summary>
     [Id(4)]
     public string ConnectionId { get; set; }
+
+    [JsonIgnore] public string Id => Name;
 
     [JsonConstructor]
     public Player(Guid ownerAccountId, string name, long currentRoomId, string currentZoneName, string? connectionId)

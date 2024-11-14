@@ -2,13 +2,13 @@ import React from 'react';
 import { Player } from '../types/Player';
 
 interface PlayerStatsProps {
-    playerState: Player;
+    player: Player;
 }
 
-const PlayerStats : React.FC<PlayerStatsProps> = ({ playerState }) => {
+const PlayerStats : React.FC<PlayerStatsProps> = ({ player }) => {
     return (
         <div className="player-stats">
-            <p>Your Name: {playerState.name}</p>
+            <p>Your Name: {player.name}</p>
         </div>
     );
 }

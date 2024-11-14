@@ -6,36 +6,66 @@
       "Name": "Entrance",
       "Description": "You are standing at the entrance of the cave. It is dark and damp. You can hear the sound of water dripping from the ceiling.",
       "InitialMobs": [],
-      "Exits": {
-        "north": 1
-      }
+      "Exits": [
+        {
+          "Direction": "North",
+          "RoomId": 1,
+          "ZoneName": "scary-cave"
+        }
+      ]
     },
     {
       "Id": 1,
       "Name": "Tunnel",
-      "Description": "You are in a long tunnel. The walls are covered in moss and the air is cold and damp.","InitialMobs": [],
-      "Exits": {
-        "north": 2,
-        "south": 0
-      }
+      "Description": "You are in a long tunnel. The walls are covered in moss and the air is cold and damp.",
+      "InitialMobs": [],
+      "Exits": [
+        {
+          "Direction": "North",
+          "RoomId": 2,
+          "ZoneName": "scary-cave"
+        },
+        {
+            "Direction": "South",
+            "RoomId": 0,
+            "ZoneName": "scary-cave"
+          }
+        ]
     },
     {
       "Id": 2,
       "Name": "Wide Room",
-      "Description": "You are in a wide cavern. The ceiling is high and you can hear the sound of water dripping from the walls.","InitialMobs": [],
-      "Exits": {
-        "north": 4,
-        "south": 1,
-        "east": 3
-      }
+      "Description": "You are in a wide cavern. The ceiling is high and you can hear the sound of water dripping from the walls.",
+      "InitialMobs": [],
+      "Exits": [
+        {
+          "Direction": "North",
+          "RoomId": 4,
+          "ZoneName": "scary-cave"
+        },
+        {
+            "Direction": "South",
+            "RoomId": 1,
+            "ZoneName": "scary-cave"
+          },
+          {
+            "Direction": "East",
+            "RoomId": 3,
+            "ZoneName": "scary-cave"
+          }
+      ]
     },
     {
       "Id": 3,
       "Name": "Small Hut",
-      "Description": "The hut is filthy and falling apart. There is a small table in the center of the room with a candle burning on it. **TODO KEY**",
-      "Exits": {
-        "west": 2
-      },
+      "Description": "The hut is filthy and falling apart. There is a small table in the center of the room with a candle burning on it.",
+      "Exits": [
+        {
+          "Direction": "West",
+          "RoomId": 2,
+          "ZoneName": "scary-cave"
+        }
+      ],
       "InitialMobs": [
         { "DefinitionId": "giant_rat", "InstanceId": "giant_rat_1" }
       ]
@@ -43,21 +73,33 @@
     {
       "Id": 4,
       "Name": "The Gate",
-      "Description": "The path is barred by an iron gate. **TODO KEY, TODO OPEN/LOCK, TODO MOB**",
+      "Description": "The path is barred by an iron gate.",
       "InitialMobs": [],
-      "Exits": {
-        "north": 5,
-        "south": 2
-      }
+      "Exits": [
+        {
+          "Direction": "North",
+          "RoomId": 5,
+          "ZoneName": "scary-cave"
+        },
+        {
+            "Direction": "South",
+            "RoomId": 2,
+            "ZoneName": "scary-cave"
+          }
+      ]
     },
     {
       "Id": 5,
       "Name": "Storeroom",
       "Description": "The shelves are lined with treasure.",
       "InitialMobs": [],
-      "Exits": {
-        "south": 4
-      }
+      "Exits": [
+        {
+            "Direction": "South",
+            "RoomId": 4,
+            "ZoneName": "scary-cave"
+          }
+      ]
     }
   ],
   "Mobs": [
@@ -65,6 +107,10 @@
       "DefinitionId": "giant_rat",
       "Name": "Giant Rat",
       "Description": "A giant rat with red eyes glares at you hungrily.",
+      "Movement": {
+        "Type": "Wander",
+        "Chance": 1.0
+      },
       "Challenge": 0.125,
       "HitPoints": 7,
       "ArmorClass": 12,

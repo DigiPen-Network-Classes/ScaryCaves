@@ -1,8 +1,8 @@
 import React from 'react';
-import { MobState } from '../types/MobState';
+import { Mob } from '../types/Mob';
 
 interface MobListProps {
-    mobs: MobState[];
+    mobs: Mob[];
 }
 
 const MobList: React.FC<MobListProps> = ({ mobs }) => {

@@ -1,3 +1,4 @@
+using ScaryCavesWeb.Actors.Extensions;
 using ScaryCavesWeb.Models;
 using ScaryCavesWeb.Services;
 
@@ -12,7 +13,7 @@ public interface IPlayerActor : IGrainWithStringKey
     /// <param name="connectionId"></param>
     /// <returns></returns>
     [Alias("BeginSession")]
-    Task<RoomState> BeginSession(string connectionId);
+    Task<ClientPlayerView> BeginSession(string connectionId);
 
     /// <summary>
     /// End a play session, returning the room the player was in (if any)
@@ -60,7 +61,7 @@ public class PlayerActor(ILogger<PlayerActor> logger,
         return true;
     }
 
-    public async Task<RoomState> BeginSession(string connectionId)
+    public async Task<ClientPlayerView> BeginSession(string connectionId)
     {
         if (Player == null)
         {
@@ -71,14 +72,14 @@ public class PlayerActor(ILogger<PlayerActor> logger,
         await PlayerState.WriteStateAsync();
 
         var location = Player.GetCurrentLocation();
-        var room = await GrainFactory.GetGrain<IRoomActor>(location.RoomId, location.ZoneName).Enter(Player);
-        return new RoomState(Player, room);
+        var room = await GrainFactory.GetRoomActor(location).EnterPlayer(Player);
+        return new ClientPlayerView(Player, room);
     }
 
     public async Task<Room?> EndSession()
     {
         var location = Player.GetCurrentLocation();
-        var room = await GrainFactory.GetGrain<IRoomActor>(location.RoomId, location.ZoneName).Leave(Player);
+        var room = await GrainFactory.GetRoomActor(location).Leave(Player);
 
         Player.ConnectionId = "";
         await PlayerState.WriteStateAsync();
@@ -106,8 +107,8 @@ public class PlayerActor(ILogger<PlayerActor> logger,
             return true;
         }
         Logger.LogInformation("Player {PlayerName} is teleporting to location {Location}", Player.Name, location);
-        _ = await GrainFactory.GetGrain<IRoomActor>(Player.CurrentRoomId, Player.CurrentZoneName).Leave(Player);
-        var newRoom = await GrainFactory.GetGrain<IRoomActor>(location.RoomId, location.ZoneName).Enter(Player);
+        _ = await GrainFactory.GetRoomActor(Player.GetCurrentLocation()).Leave(Player);
+        var newRoom = await GrainFactory.GetRoomActor(location).EnterPlayer(Player);
         Player.SetCurrentLocation(newRoom.Location);
         await PlayerState.WriteStateAsync();
         return true;
@@ -116,7 +117,7 @@ public class PlayerActor(ILogger<PlayerActor> logger,
     public async Task<Room?> MoveTo(Direction direction)
     {
         Logger.LogInformation("Player {PlayerName} wants to move {Direction}", Player.Name, direction);
-        var destination = await GrainFactory.GetGrain<IRoomActor>(Player.CurrentRoomId, Player.CurrentZoneName).Move(Player, direction);
+        var destination = await GrainFactory.GetRoomActor(Player.GetCurrentLocation()).Move(Player, direction);
         if (destination == null)
         {
             // can't go that way

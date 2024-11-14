@@ -18,8 +18,11 @@ const Navbar: React.FC = () => {
                     </li>
                     <li className="nav-item">
                         <Link href="/about" passHref className="nav-link">
-                        About
+                            About
                         </Link>
+                    </li>
+                    <li className="nav-item">
+                        <a href="https://github.com/DigiPen-Network-Classes/ScaryCaves">Project</a>
                     </li>
                 </ul>
             </div>

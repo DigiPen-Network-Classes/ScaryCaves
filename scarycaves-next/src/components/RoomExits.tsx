@@ -1,23 +1,18 @@
 import React from 'react';
-import { RoomState } from '../types/RoomState';
-import { HubConnection } from '@microsoft/signalr';
 
 interface RoomExitsProps {
-    roomState: RoomState;
-    connection: HubConnection | null;
+    playerView: {
+        room: {
+            exits: string[];
+        };
+    };
+    handleExitClick: (direction:string) => void;
 }
 
-const RoomExits: React.FC<RoomExitsProps> = ({ roomState, connection }) => {
-    const handleExitClick = (direction: string) => {
-        if (connection) {
-            connection.invoke("MoveTo", direction)
-                .catch(err => console.error("Failed to move", err));
-        }
-    };
-
+const RoomExits: React.FC<RoomExitsProps> = ({ playerView, handleExitClick }) => {
     return (
         <ul className="player-action">
-            {Object.entries(roomState.room.exits).map(([direction]) => (
+            {playerView.room.exits.map((direction)=> (
                 <li key={direction} className="player-action">
                     <button
                         type="button"

@@ -31,7 +31,7 @@ export default function RootLayout({
   </div>
   <footer className="border-top footer text-muted">
     <div className="container">
-      &copy; 2024 - <a href="https://www.digipen.edu">DigiPen</a>, <a href="mailto:scarycave@meancat.com">Tony Rasa</a>. All rights reserved.
+      &copy; 2024 - <a href="mailto:scarycave@meancat.com">Tony Rasa</a>. All rights reserved.
     </div>
   </footer>
   <BootstrapClient/>

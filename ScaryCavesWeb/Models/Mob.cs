@@ -1,9 +1,9 @@
-using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace ScaryCavesWeb.Models;
 
-[GenerateSerializer]
-[Alias("ScaryCavesWeb.Models.MobIdentifier")]
+[GenerateSerializer, Alias("ScaryCavesWeb.Models.MobIdentifier")]
+// ReSharper disable once ClassNeverInstantiated.Global
 public class MobIdentifier(string instanceId, string definitionId)
 {
     [Id(0)]
@@ -13,7 +13,7 @@ public class MobIdentifier(string instanceId, string definitionId)
 
     private bool Equals(MobIdentifier other)
     {
-        return InstanceId == other.InstanceId && DefinitionId == other.DefinitionId;
+        return InstanceId == other.InstanceId;
     }
 
     public override bool Equals(object? obj)
@@ -26,7 +26,7 @@ public class MobIdentifier(string instanceId, string definitionId)
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(InstanceId, DefinitionId);
+        return HashCode.Combine(InstanceId);
     }
 
     public static bool operator ==(MobIdentifier? left, MobIdentifier? right)
@@ -46,7 +46,7 @@ public class MobIdentifier(string instanceId, string definitionId)
 /// </summary>
 [GenerateSerializer]
 [Alias("ScaryCavesWeb.Models.Mob")]
-public class Mob
+public class Mob : IMobile
 {
     [Id(0)]
     public string InstanceId { get; }
@@ -61,33 +61,56 @@ public class Mob
     public int CurrentArmorClass { get; }
 
     [Id(4)]
-    public string CurrentZone { get; set; }
+    public string CurrentZoneName { get; set; }
 
     [Id(5)]
     public long CurrentRoomId { get; set; }
 
+    [Id(6)]
+    public string Name { get; set; }
+
+    [Id(7)]
+    public MobMovement Movement { get; set; }
+
+    [Id(8)]
+    public string Description { get; set; }
+
+    [Newtonsoft.Json.JsonIgnore] public string Id => InstanceId;
+
+    public Location GetCurrentLocation() => new(CurrentRoomId, CurrentZoneName);
+    public void SetCurrentLocation(Location currentLocation)
+    {
+        CurrentRoomId = currentLocation.RoomId;
+        CurrentZoneName = currentLocation.ZoneName;
+    }
     /// <summary>
     /// An instance of a mob, walking around doing stuff.
     /// </summary>
-    [JsonConstructor]
-    public Mob(string instanceId, string definitionId, int currentHitPoints, int currentArmorClass, string currentZone, long currentRoomId)
+    [Newtonsoft.Json.JsonConstructor]
+    public Mob(string instanceId, string definitionId, string name, string description, int currentHitPoints, int currentArmorClass, string currentZoneName, long currentRoomId, MobMovement movement)
     {
         InstanceId = instanceId;
         DefinitionId = definitionId;
+        Name = name;
+        Description = description;
         CurrentHitPoints = currentHitPoints;
         CurrentArmorClass = currentArmorClass;
-        CurrentZone = currentZone;
+        CurrentZoneName = currentZoneName;
         CurrentRoomId = currentRoomId;
+        Movement = movement;
     }
 
     public Mob(string instanceId, MobDefinition definition, Location currentLocation)
     {
         InstanceId = instanceId;
         DefinitionId = definition.DefinitionId;
+        Name = definition.Name;
+        Description = definition.Description;
         CurrentHitPoints = definition.HitPoints;
         CurrentArmorClass = definition.ArmorClass;
-        CurrentZone = currentLocation.ZoneName;
+        CurrentZoneName = currentLocation.ZoneName;
         CurrentRoomId = currentLocation.RoomId;
+        Movement = definition.Movement;
     }
 }
 
@@ -95,9 +118,10 @@ public class Mob
 [Alias("ScaryCavesWeb.Models.MobDefinition")]
 public class MobDefinition
 {
-    [JsonConstructor]
+    [Newtonsoft.Json.JsonConstructor]
     public MobDefinition(string definitionId, string name, string description,
-        double challenge, int hitPoints, int armorClass, int strength, int dexterity, int constitution, int intelligence, int wisdom, int charisma, List<AttackDefinition> attacks)
+        double challenge, int hitPoints, int armorClass, int strength, int dexterity, int constitution, int intelligence, int wisdom, int charisma,
+        List<AttackDefinition> attacks, MobMovement movement)
     {
         DefinitionId = definitionId;
         Name = name;
@@ -112,6 +136,7 @@ public class MobDefinition
         Wisdom = wisdom;
         Charisma = charisma;
         Attacks = attacks;
+        Movement = movement;
     }
 
     [Id(0)]
@@ -140,4 +165,26 @@ public class MobDefinition
     public int Charisma { get; }
     [Id(12)]
     public List<AttackDefinition> Attacks { get; }
+    [Id(13)]
+    public MobMovement Movement { get; }
+}
+
+[Newtonsoft.Json.JsonConverter(typeof(StringEnumConverter))]
+public enum MovementType
+{
+    Stationary = 0,
+    Wander = 1,
+}
+
+[GenerateSerializer, Alias("ScaryCavesWeb.Models.MobMovement")]
+public class MobMovement
+{
+    public MobMovement(MovementType type, double chance)
+    {
+        Type = type;
+        Chance = chance;
+    }
+
+    [Id(0)] public MovementType Type { get; }
+    [Id(1)] public double Chance { get; }
 }

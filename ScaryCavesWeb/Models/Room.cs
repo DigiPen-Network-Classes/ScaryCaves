@@ -1,4 +1,3 @@
-
 using Newtonsoft.Json;
 
 namespace ScaryCavesWeb.Models;
@@ -8,7 +7,7 @@ namespace ScaryCavesWeb.Models;
 public class RoomDefinition
 {
     [JsonConstructor]
-    public RoomDefinition(long id, string name, string description, IReadOnlyDictionary<Direction, long> exits, List<MobIdentifier>? initialMobs)
+    public RoomDefinition(long id, string name, string description, List<RoomExit> exits, List<MobIdentifier>? initialMobs)
     {
         Id = id;
         Name = name;
@@ -26,7 +25,7 @@ public class RoomDefinition
     [Id(3)]
     public List<MobIdentifier> InitialMobs { get; }
     [Id(4)]
-    public IReadOnlyDictionary<Direction, long> Exits { get; }
+    public List<RoomExit> Exits { get; }
 }
 
 [GenerateSerializer]
@@ -36,8 +35,8 @@ public class Room
     [Id(0)] public long Id { get; }
     [Id(1)] public string Name { get; }
     [Id(2)] public string Description { get; }
-    [Id(3)] public IReadOnlyDictionary<Direction, long> Exits { get; }
-    [Id(4)] public HashSet<string> PlayersInRoom { get; } = [];
+    [Id(3)] public List<RoomExit> Exits { get; }
+    [Id(4)] public HashSet<string> PlayersInRoom { get; }
     [Id(5)] public string ZoneName { get; set; }
     [Id(6)] public HashSet<MobState> MobsInRoom { get; }
 
@@ -56,7 +55,7 @@ public class Room
     }
 
     [JsonConstructor]
-    public Room(long id, string name, string description, IReadOnlyDictionary<Direction, long> exits, HashSet<string>? playersInRoom, string zoneName, HashSet<MobState>? mobsInRoom)
+    public Room(long id, string name, string description, List<RoomExit> exits, HashSet<string>? playersInRoom, string zoneName, HashSet<MobState>? mobsInRoom)
     {
         Id = id;
         Name = name;
@@ -67,7 +66,7 @@ public class Room
         MobsInRoom = mobsInRoom ?? [];
     }
 
-    private Location? GetExit(Direction d) => Exits.TryGetValue(d, out var roomId) ? new Location(roomId, ZoneName) : null;
+    private Location? GetExit(Direction d) => Exits.FirstOrDefault(e => e.Direction == d)?.GetLocation();
 
     [JsonIgnore]
     public Location? this[Direction d] => GetExit(d);
@@ -87,24 +86,19 @@ public class Room
         MobsInRoom.Add(mob);
     }
 
-    public void RemoveMob(MobState mob)
+    public MobState? RemoveMob(string mobInstanceId)
     {
-        MobsInRoom.Remove(mob);
+        var mobState = MobsInRoom.SingleOrDefault(ms => ms.InstanceId == mobInstanceId);
+        if (mobState != null)
+        {
+            MobsInRoom.Remove(mobState);
+        }
+
+        return mobState;
     }
 
     public void ClearMobs()
     {
         MobsInRoom.Clear();
-    }
-
-    public Room MinusPlayer(string? player)
-    {
-        if (string.IsNullOrEmpty(player))
-        {
-            return this;
-        }
-        var newPlayers = new HashSet<string>(PlayersInRoom);
-        newPlayers.Remove(player);
-        return new Room(Id, Name, Description, Exits, newPlayers, ZoneName, MobsInRoom);
     }
 }

@@ -25,9 +25,25 @@ public class MobState
         Description = description;
     }
 
+    public MobState(Mob mob)
+    {
+        InstanceId = mob.InstanceId;
+        DefinitionId = mob.DefinitionId;
+        Name = mob.Name;
+        Description = mob.Description;
+    }
+
+    public MobState(MobIdentifier identifier, MobDefinition definition)
+    {
+        InstanceId = identifier.InstanceId;
+        DefinitionId = identifier.DefinitionId;
+        Name = definition.Name;
+        Description = definition.Description;
+    }
+
     protected bool Equals(MobState other)
     {
-        return InstanceId == other.InstanceId && DefinitionId == other.DefinitionId;
+        return InstanceId == other.InstanceId;
     }
 
     public override bool Equals(object? obj)
@@ -40,7 +56,7 @@ public class MobState
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(InstanceId, DefinitionId);
+        return HashCode.Combine(InstanceId);
     }
 
     public static bool operator ==(MobState? left, MobState? right)

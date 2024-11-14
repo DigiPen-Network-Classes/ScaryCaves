@@ -26,11 +26,10 @@ public class GameHub(ILogger<GameHub> logger, IClusterClient clusterClient) : Hu
             await Clients.Caller.SendAsync("ReceiveMessage", "You must be logged in to be in the Scary Cave! (Authentication failure)");
             return;
         }
-        var roomState = await ClusterClient.GetGrain<IPlayerActor>(playerName).BeginSession(Context.ConnectionId);
+        ClientPlayerView playerView = await ClusterClient.GetGrain<IPlayerActor>(playerName).BeginSession(Context.ConnectionId);
 
         await Clients.Caller.SendAsync("ReceiveMessage", $"Welcome {playerName} to the Scary Cave!");
-        await Clients.Caller.SendAsync("UpdateRoomState", roomState);
-        //await EnterRoom(roomState.Room, roomState.Player.Name);
+        await Clients.Caller.SendAsync("UpdatePlayerView", playerView);
 
         await base.OnConnectedAsync();
     }
@@ -47,8 +46,8 @@ public class GameHub(ILogger<GameHub> logger, IClusterClient clusterClient) : Hu
     /// Player requests to move from their current location in a given direction
     /// </summary>
     /// <param name="direction"></param>
-    /// <returns>true if they can, false if they cannot (for any reason)</returns>
-    public async Task<RoomState?> MoveTo(string direction)
+    /// <returns>new view if success, null otherwise</returns>
+    public async Task<ClientPlayerView?> MoveTo(string direction)
     {
         if (!Enum.TryParse<Direction>(direction, out var d))
         {
@@ -57,7 +56,7 @@ public class GameHub(ILogger<GameHub> logger, IClusterClient clusterClient) : Hu
             return null;
         }
 
-        Logger.LogInformation("Player {PlayerName} is attempting to go {Direction}", PlayerName, d);
+        Logger.LogInformation("Player {PlayerName} wants to go {Direction}", PlayerName, d);
         var destinationRoom = await ClusterClient.GetGrain<IPlayerActor>(PlayerName).MoveTo(d);
         if (destinationRoom == null)
         {
@@ -65,8 +64,9 @@ public class GameHub(ILogger<GameHub> logger, IClusterClient clusterClient) : Hu
             await Clients.Caller.SendAsync("ReceiveMessage", "You can't go that way!");
             return null;
         }
-        var roomState = new RoomState(new Player(AccountId, PlayerName ?? "", destinationRoom.Id, destinationRoom.ZoneName, Context.ConnectionId), destinationRoom);
-        await Clients.Caller.SendAsync("UpdateRoomState", roomState);
+
+        var roomState = new ClientPlayerView(new Player(AccountId, PlayerName ?? "", destinationRoom.Id, destinationRoom.ZoneName, Context.ConnectionId), destinationRoom);
+        await Clients.Caller.SendAsync("UpdatePlayerView", roomState);
         return roomState;
     }
 }
