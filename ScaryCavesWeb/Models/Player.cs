@@ -39,15 +39,4 @@ public class Player : IMobile
         CurrentRoomId = currentLocation.RoomId;
         CurrentZoneName = currentLocation.ZoneName;
     }
-
-    /// <summary>
-    /// Determine if the Player has deserialized into a valid state.
-    /// </summary>
-    /// <param name="player"></param>
-    /// <param name="ownerAccountId">must not be Guid.Empty</param>
-    /// <returns>true if things are good, false otherwise</returns>
-    public static bool IsValid(Player? player, Guid ownerAccountId)
-    {
-        return !string.IsNullOrEmpty(player?.Name) && player.OwnerAccountId != Guid.Empty && player.OwnerAccountId == ownerAccountId;
-    }
 }

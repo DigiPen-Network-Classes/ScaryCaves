@@ -6,14 +6,14 @@ namespace ScaryCavesWeb.Services.Databases;
 
 public interface IZoneDatabase
 {
-    ZoneDefinition? GetZone(string zoneName);
-
     IEnumerable<ZoneDefinition> Zones { get; }
+    ZoneDefinition? GetZone(string name);
 }
 
 public class ZoneDatabase(List<ZoneDefinition> zones) : IZoneDatabase
 {
     public IEnumerable<ZoneDefinition> Zones { get; } = zones;
+
     public ZoneDefinition? GetZone(string zoneName)
     {
         return Zones.SingleOrDefault(z => z.Name == zoneName);

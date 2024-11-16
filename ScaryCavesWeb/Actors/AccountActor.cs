@@ -46,7 +46,7 @@ public class AccountActor(
         }
         else
         {
-            Logger.LogInformation("Welcome Account {NewAccountName}", newAccount.PlayerName);
+            Logger.LogInformation("Welcome new Account {NewAccountName}", newAccount.PlayerName);
         }
 
         AccountState.State = newAccount;
@@ -63,7 +63,7 @@ public class AccountActor(
             return Task.FromResult<Account?>(null);
         }
 
-        Logger.LogInformation("Welcome Login Account {AccountId} - {AccountName}", this.GetPrimaryKey(), Account.PlayerName);
+        Logger.LogInformation("Welcome back Account {AccountId} - {AccountName}", this.GetPrimaryKey(), Account.PlayerName);
         return Task.FromResult<Account?>(Account);
     }
     public async Task Logout()

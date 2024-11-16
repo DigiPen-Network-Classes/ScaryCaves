@@ -48,11 +48,7 @@ public class PlayerActor(ILogger<PlayerActor> logger,
     [PersistentState(nameof(Player), ScaryCaveSettings.PlayerStorageProvider)] IPersistentState<Player> playerState) : Grain, IPlayerActor
 {
     private ILogger<PlayerActor> Logger { get; } = logger;
-    public ScaryCaveSettings Settings { get; } = settings;
-
-    /// <summary>
-    /// TODO lifetime of state needs to line up with redis lifetime of account/player
-    /// </summary>
+    private ScaryCaveSettings Settings { get; } = settings;
     private IPersistentState<Player> PlayerState { get; } = playerState;
 
     private Player Player => PlayerState.State;
@@ -131,12 +127,12 @@ public class PlayerActor(ILogger<PlayerActor> logger,
 
     public async Task<Room?> MoveTo(Direction direction)
     {
-        Logger.LogInformation("Player {PlayerName} wants to move {Direction}", Player.Name, direction);
+        Logger.LogDebug("Player {PlayerName} wants to move {Direction}", Player.Name, direction);
         var destination = await GrainFactory.GetRoomActor(Player.GetCurrentLocation()).Move(Player, direction);
         if (destination == null)
         {
             // can't go that way
-            Logger.LogInformation("Player {PlayerName} tried to go {Direction} but was not allowed to.", Player.Name, direction);
+            Logger.LogWarning("Player {PlayerName} tried to go {Direction} but was not allowed to.", Player.Name, direction);
             return null;
         }
 

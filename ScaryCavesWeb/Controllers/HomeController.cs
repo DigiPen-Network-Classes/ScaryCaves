@@ -73,7 +73,7 @@ public class HomeController(
         {
             return BadRequest();
         }
-        Logger.LogDebug("Register new player: '{PlayerName}'", model.PlayerName);
+        Logger.LogInformation("Register new player: '{PlayerName}'", model.PlayerName);
         var account =  await AccountSession.Register(model.PlayerName, model.Password);
         if (account == null)
         {

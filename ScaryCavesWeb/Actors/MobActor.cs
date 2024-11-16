@@ -49,7 +49,7 @@ public class MobActor(ILogger<MobActor> logger,
 
     private async Task OnTick(object? _)
     {
-        Logger.LogInformation("Mob {InstanceId} ticking", this.GetPrimaryKeyString());
+        Logger.LogTrace("Mob {InstanceId} ticking", this.GetPrimaryKeyString());
         if (!MobState.RecordExists)
         {
             Logger.LogWarning("Mob {InstanceId} has no state - that's not good ... ", this.GetPrimaryKeyString());
@@ -83,7 +83,7 @@ public class MobActor(ILogger<MobActor> logger,
         var chance = Random.Next();
         if (!(chance < Mob.Movement.Chance))
         {
-            Logger.LogInformation("Mob {InstanceId} staying put.", Mob.InstanceId);
+            Logger.LogDebug("Mob {InstanceId} could wander, but isn't going to this time.", Mob.InstanceId);
             return;
         }
 
@@ -95,24 +95,22 @@ public class MobActor(ILogger<MobActor> logger,
             return;
         }
 
-        var room = await MoveTo(direction.Value);
-        Logger.LogInformation("Moved to {Location}", room?.Location);
+        await MoveTo(direction.Value);
     }
 
-    private async Task<Room?> MoveTo(Direction direction)
+    private async Task MoveTo(Direction direction)
     {
-        Logger.LogInformation("Mob {InstanceId} wants to move {Direction}", Mob.InstanceId, direction);
+        Logger.LogDebug("{InstanceId} thinks about moving {Direction}", Mob.InstanceId, direction);
         var destination = await GrainFactory.GetRoomActor(Mob.GetCurrentLocation()).Move(Mob, direction);
         if (destination == null)
         {
             // can't go that way!
-            Logger.LogInformation("Mob {InstanceId} tried to go {Direction} but was not allowed to.", Mob.InstanceId, direction);
-            return null;
+            Logger.LogWarning("Mob {InstanceId} tried to go {Direction} but was not allowed to.", Mob.InstanceId, direction);
+            return;
         }
 
         Mob.SetCurrentLocation(destination.Location);
         await MobState.WriteStateAsync();
         Logger.LogInformation("Mob {InstanceId} is now at {Location}", Mob.InstanceId, Mob.GetCurrentLocation());
-        return destination;
     }
 }

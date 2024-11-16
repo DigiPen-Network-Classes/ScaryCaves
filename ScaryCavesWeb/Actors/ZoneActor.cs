@@ -1,4 +1,5 @@
 using ScaryCavesWeb.Models;
+using ScaryCavesWeb.Services.Databases;
 
 namespace ScaryCavesWeb.Actors;
 
@@ -19,10 +20,12 @@ public interface IZoneActor : IGrainWithStringKey
     Task WakeMobs();
 }
 public class ZoneActor(ILogger<ZoneActor> logger,
+    IZoneDatabase zoneDatabase,
     [PersistentState(nameof(ZoneDefinition))] IPersistentState<ZoneDefinition> zoneDefinitionState): Grain, IZoneDefinitionActor, IZoneActor
 {
-
     private ILogger<ZoneActor> Logger { get; } = logger;
+    private IZoneDatabase ZoneDatabase { get; } = zoneDatabase;
+
     private IPersistentState<ZoneDefinition> ZoneDefinitionState { get; } = zoneDefinitionState;
     private ZoneDefinition ZoneDefinition => ZoneDefinitionState.State;
 
@@ -31,7 +34,13 @@ public class ZoneActor(ILogger<ZoneActor> logger,
         if (!ZoneDefinitionState.RecordExists)
         {
             // we need to reload the room state from the zone
-            await Reload();
+            var zoneDefinition = ZoneDatabase.GetZone(this.GetPrimaryKeyString());
+            if (zoneDefinition == null)
+            {
+                Logger.LogError("Zone {ZoneId} not found in ZoneDatabase!", this.GetPrimaryKeyString());
+                throw new InvalidOperationException($"Zone {this.GetPrimaryKeyString()} not found in ZoneDatabase!");
+            }
+            await ReloadFrom(zoneDefinition);
         }
 
         return ZoneDefinition;
@@ -39,32 +48,23 @@ public class ZoneActor(ILogger<ZoneActor> logger,
 
     public async Task<(ZoneDefinition, RoomDefinition?)> GetRoomDefinition(long roomId)
     {
-        if (!ZoneDefinitionState.RecordExists)
-        {
-            await Reload();
-        }
-
-        return (ZoneDefinition, ZoneDefinition.GetRoom(roomId));
-    }
-
-    public async Task Reload()
-    {
-        Logger.LogInformation("Reloading Zone {ZoneName}", ZoneDefinition.Name);
-        foreach (var room in ZoneDefinition.Rooms)
-        {
-            await GrainFactory.GetGrain<IRoomDefinitionActor>(room.Id, ZoneDefinition.Name).ReloadFrom(ZoneDefinition, room);
-        }
+        var zone = await Get();
+        return (zone, zone.GetRoom(roomId));
     }
 
     public async Task ReloadFrom(ZoneDefinition zoneDefinition)
     {
         ZoneDefinitionState.State = zoneDefinition;
         await ZoneDefinitionState.WriteStateAsync();
-        await Reload();
+        foreach(var room in zoneDefinition.Rooms)
+        {
+            await GrainFactory.GetGrain<IRoomDefinitionActor>(room.Id, zoneDefinition.Name).ReloadFrom(zoneDefinition, room);
+        }
     }
 
     public async Task WakeMobs()
     {
+        Logger.LogDebug("Waking up the mobs!");
         var zone = await Get();
         foreach(var mob in zone.MobInstanceIds)
         {

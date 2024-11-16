@@ -74,7 +74,9 @@
       "Id": 4,
       "Name": "The Gate",
       "Description": "The path is barred by an iron gate.",
-      "InitialMobs": [],
+      "InitialMobs": [
+        { "DefinitionId": "vault_guard", "InstanceId": "vault_guard_1" }
+      ],
       "Exits": [
         {
           "Direction": "North",
@@ -109,7 +111,7 @@
       "Description": "A giant rat with red eyes glares at you hungrily.",
       "Movement": {
         "Type": "Wander",
-        "Chance": 1.0
+        "Chance": 0.8
       },
       "Challenge": 0.125,
       "HitPoints": 7,
@@ -126,6 +128,32 @@
           "Description": "The rat bites you!",
           "Damage": "1d4+2",
           "AttackBonus": 4
+        }
+      ]
+    },
+    {
+      "DefinitionId": "vault_guard",
+      "Name": "Guard",
+      "Description": "A Guard stands here, looking bored.",
+      "Movement": {
+        "Type": "Stationary",
+        "Chance": 0.0
+      },
+      "Challenge": 0.125,
+      "HitPoints": 7,
+      "ArmorClass": 12,
+      "Strength": 7,
+      "Dexterity": 15,
+      "Constitution": 11,
+      "Intelligence": 2,
+      "Wisdom": 10,
+      "Charisma": 4,
+      "attacks": [
+        {
+          "Name": "Slash",
+          "Description": "The guard slashes at you with his sword!",
+          "Damage": "1d8",
+          "AttackBonus": 0
         }
       ]
     }
