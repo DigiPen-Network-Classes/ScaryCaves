@@ -9,6 +9,15 @@ public interface IMobActor : IGrainWithStringKey
 {
     [Alias("Reload")]
     Task Reload(string zoneName, long roomId, MobDefinition definition);
+
+    /// <summary>
+    /// Hey, wake up!
+    ///
+    /// Doesn't reset the state or position or anything though.
+    /// </summary>
+    /// <returns></returns>
+    [Alias("Wake")]
+    Task Wake();
 }
 
 public class MobActor(ILogger<MobActor> logger,
@@ -41,6 +50,11 @@ public class MobActor(ILogger<MobActor> logger,
     private async Task OnTick(object? _)
     {
         Logger.LogInformation("Mob {InstanceId} ticking", this.GetPrimaryKeyString());
+        if (!MobState.RecordExists)
+        {
+            Logger.LogWarning("Mob {InstanceId} has no state - that's not good ... ", this.GetPrimaryKeyString());
+            return;
+        }
         if (Mob.Movement.Type == MovementType.Wander)
         {
             await Wander();
@@ -52,6 +66,16 @@ public class MobActor(ILogger<MobActor> logger,
         Logger.LogInformation("Mob {InstanceId} deactivating: {Reason}", this.GetPrimaryKeyString(), reason);
         MobTick?.Dispose();
         return base.OnDeactivateAsync(reason, cancellationToken);
+    }
+
+    public Task Wake()
+    {
+        if (!MobState.RecordExists)
+        {
+            Logger.LogWarning("Woke up {InstanceId} but it doesn't have state - that's not good ... ", this.GetPrimaryKeyString());
+        }
+
+        return Task.CompletedTask;
     }
 
     private async Task Wander()

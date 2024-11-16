@@ -20,4 +20,12 @@ public class ZoneDefinition
 
     public RoomDefinition? GetRoom(long roomId) => Rooms.SingleOrDefault(r => r.Id == roomId);
     public MobDefinition? GetMobDefinition(string definitionId) => Mobs.SingleOrDefault(m => m.DefinitionId == definitionId);
+
+    public List<string> MobInstanceIds
+    {
+        get
+        {
+            return Rooms.SelectMany(r => r.InitialMobs).Select(m => m.InstanceId).ToList();
+        }
+    }
 }

@@ -1,5 +1,3 @@
-using System.Runtime.CompilerServices;
-using ScaryCavesWeb.Actors.Extensions;
 using ScaryCavesWeb.Models;
 
 namespace ScaryCavesWeb.Actors;
@@ -10,21 +8,34 @@ public interface IZoneDefinitionActor : IGrainWithStringKey
     [Alias("GetRoomDefinition")]
     Task<(ZoneDefinition,RoomDefinition?)> GetRoomDefinition(long roomId);
 
-    [Alias("Reload")]
-    Task Reload();
-
     [Alias("ReloadFrom")]
     Task ReloadFrom(ZoneDefinition roomDefinition);
 }
 
+[Alias("ScaryCavesWeb.Actors.IZoneActor")]
+public interface IZoneActor : IGrainWithStringKey
+{
+    [Alias("WakeMobs")]
+    Task WakeMobs();
+}
 public class ZoneActor(ILogger<ZoneActor> logger,
-    [PersistentState(nameof(ZoneDefinition))] IPersistentState<ZoneDefinition> zoneDefinitionState): Grain, IZoneDefinitionActor
+    [PersistentState(nameof(ZoneDefinition))] IPersistentState<ZoneDefinition> zoneDefinitionState): Grain, IZoneDefinitionActor, IZoneActor
 {
 
     private ILogger<ZoneActor> Logger { get; } = logger;
     private IPersistentState<ZoneDefinition> ZoneDefinitionState { get; } = zoneDefinitionState;
     private ZoneDefinition ZoneDefinition => ZoneDefinitionState.State;
 
+    private async Task<ZoneDefinition> Get()
+    {
+        if (!ZoneDefinitionState.RecordExists)
+        {
+            // we need to reload the room state from the zone
+            await Reload();
+        }
+
+        return ZoneDefinition;
+    }
 
     public async Task<(ZoneDefinition, RoomDefinition?)> GetRoomDefinition(long roomId)
     {
@@ -50,5 +61,14 @@ public class ZoneActor(ILogger<ZoneActor> logger,
         ZoneDefinitionState.State = zoneDefinition;
         await ZoneDefinitionState.WriteStateAsync();
         await Reload();
+    }
+
+    public async Task WakeMobs()
+    {
+        var zone = await Get();
+        foreach(var mob in zone.MobInstanceIds)
+        {
+            await GrainFactory.GetGrain<IMobActor>(mob).Wake();
+        }
     }
 }

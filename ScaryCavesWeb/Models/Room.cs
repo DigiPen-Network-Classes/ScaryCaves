@@ -7,25 +7,20 @@ namespace ScaryCavesWeb.Models;
 public class RoomDefinition
 {
     [JsonConstructor]
-    public RoomDefinition(long id, string name, string description, List<RoomExit> exits, List<MobIdentifier>? initialMobs)
+    public RoomDefinition(long id, string name, string description, List<RoomExit>? exits, List<MobIdentifier>? initialMobs)
     {
         Id = id;
         Name = name;
         Description = description;
         InitialMobs = initialMobs ?? [];
-        Exits = exits;
+        Exits = exits ?? [];
     }
 
-    [Id(0)]
-    public long Id { get; }
-    [Id(1)]
-    public string Name { get; }
-    [Id(2)]
-    public string Description { get; }
-    [Id(3)]
-    public List<MobIdentifier> InitialMobs { get; }
-    [Id(4)]
-    public List<RoomExit> Exits { get; }
+    [Id(0)] public long Id { get; }
+    [Id(1)] public string Name { get; }
+    [Id(2)] public string Description { get; }
+    [Id(3)] public List<MobIdentifier> InitialMobs { get; }
+    [Id(4)] public List<RoomExit> Exits { get; }
 }
 
 [GenerateSerializer]
