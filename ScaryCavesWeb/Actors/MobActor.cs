@@ -22,14 +22,15 @@ public interface IMobActor : IGrainWithStringKey
 
 public class MobActor(ILogger<MobActor> logger,
     [PersistentState(nameof(Mob))] IPersistentState<Mob> mobState,
-    IRandomService randomService) : Grain, IMobActor
+    IRandomService randomService,
+    ScaryCaveSettings settings) : Grain, IMobActor
 {
     private ILogger<MobActor> Logger { get; } = logger;
     private IPersistentState<Mob> MobState { get; } = mobState;
     private IRandomService Random { get; } = randomService;
+    private ScaryCaveSettings Settings { get; } = settings;
+
     private IDisposable? MobTick { get; set; }
-    // set low for testing:
-    private const int MobTickSeconds = 10;
 
     private Mob Mob => MobState.State;
 
@@ -43,7 +44,9 @@ public class MobActor(ILogger<MobActor> logger,
 
     public override Task OnActivateAsync(CancellationToken cancellationToken)
     {
-        MobTick = this.RegisterGrainTimer<object?>(OnTick, null, TimeSpan.FromSeconds(MobTickSeconds), TimeSpan.FromSeconds(MobTickSeconds));
+        Logger.LogInformation("Mob {InstanceId} activating", this.GetPrimaryKeyString());
+
+        MobTick = this.RegisterGrainTimer<object?>(OnTick, null, Settings.MobActivityTimeSpan, Settings.MobActivityTimeSpan);
         return base.OnActivateAsync(cancellationToken);
     }
 
