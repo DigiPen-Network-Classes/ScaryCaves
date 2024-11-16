@@ -4,7 +4,6 @@ using ScaryCavesWeb.Hubs;
 using ScaryCavesWeb.Services;
 using StackExchange.Redis;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 var scaryCaveSettings = new ScaryCaveSettings();

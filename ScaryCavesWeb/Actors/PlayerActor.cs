@@ -79,6 +79,12 @@ public class PlayerActor(ILogger<PlayerActor> logger,
         Player.ConnectionId = connectionId;
         await PlayerState.WriteStateAsync();
 
+        // simple keep alive for now (to be replaced by streams ... someday)
+        await GrainFactory.GetGrain<IAccountActor>(Player.OwnerAccountId).Ping();
+
+        // at the beginning of a session, lets wake up the mobs:
+        await GrainFactory.GetGrain<IZoneActor>(Player.GetCurrentLocation().ZoneName).ActivateMobs();
+
         var location = Player.GetCurrentLocation();
         var room = await GrainFactory.GetRoomActor(location).EnterPlayer(Player);
         return new ClientPlayerView(Player, room);

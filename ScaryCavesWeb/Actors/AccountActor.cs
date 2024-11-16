@@ -17,6 +17,16 @@ public interface IAccountActor : IGrainWithGuidKey
 
     [Alias("GetAccount")]
     Task<Account> GetAccount();
+
+    /// <summary>
+    /// Keep the account state alive
+    ///
+    /// To be replaced by Orleans Streams (using Redis) - which turned out
+    /// to be a larger task than I want to handle right now ...
+    /// </summary>
+    /// <returns></returns>
+    [Alias("Ping")]
+    Task Ping();
 }
 
 public class AccountActor(
@@ -64,5 +74,10 @@ public class AccountActor(
     public Task<Account> GetAccount()
     {
         return Task.FromResult(Account);
+    }
+
+    public async Task Ping()
+    {
+        await AccountState.WriteStateAsync();
     }
 }

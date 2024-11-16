@@ -26,7 +26,7 @@ public class GameHub(ILogger<GameHub> logger, IClusterClient clusterClient) : Hu
             await Clients.Caller.SendAsync("ReceiveMessage", "You must be logged in to be in the Scary Cave! (Authentication failure)");
             return;
         }
-        ClientPlayerView playerView = await ClusterClient.GetGrain<IPlayerActor>(playerName).BeginSession(Context.ConnectionId);
+        var playerView = await ClusterClient.GetGrain<IPlayerActor>(playerName).BeginSession(Context.ConnectionId);
 
         await Clients.Caller.SendAsync("ReceiveMessage", $"Welcome {playerName} to the Scary Cave!");
         await Clients.Caller.SendAsync("UpdatePlayerView", playerView);
