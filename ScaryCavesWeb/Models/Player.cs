@@ -25,8 +25,6 @@ public class Player : IMobile
     [JsonConstructor]
     public Player(Guid ownerAccountId, string name, long currentRoomId, string currentZoneName, string? connectionId)
     {
-        ArgumentOutOfRangeException.ThrowIfEqual(ownerAccountId, Guid.Empty);
-        ArgumentException.ThrowIfNullOrEmpty(name);
         OwnerAccountId = ownerAccountId;
         Name = name;
         CurrentRoomId = currentRoomId;

@@ -10,12 +10,15 @@ var builder = WebApplication.CreateBuilder(args);
 var settings = new ScaryCaveSettings();
 builder.Configuration.Bind("ScaryCaves", settings);
 builder.Services.AddSingleton(settings);
-
+/*
 // redis connection - used for accounts (until we move it to mongodb)
 var redisConnectionString = builder.Configuration.GetSection("Redis:ConnectionString").Value;
 var redisConn = ConnectionMultiplexer.Connect(redisConnectionString!);
 builder.Services.AddSingleton<IConnectionMultiplexer>(redisConn);
 builder.Services.AddScoped<IDatabase>(sp => sp.GetRequiredService<IConnectionMultiplexer>().GetDatabase());
+*/
+// use mongodb for accounts and players
+
 
 builder.Host.UseOrleans(static siloBuilder =>
 {
@@ -33,6 +36,12 @@ builder.Host.UseOrleans(static siloBuilder =>
     });
 
     siloBuilder.UseLocalhostClustering();
+    siloBuilder.UseMongoDBClient("mongodb://scarycaveuser:scarycave@bertrand.meancat.org:27017");
+    siloBuilder.AddMongoDBGrainStorage(ScaryCaveSettings.AccountStorageProvider, options =>
+    {
+        options.DatabaseName = "scarycavedb";
+    });
+
     // everything else is stored in redis
     siloBuilder.AddRedisGrainStorageAsDefault(options =>
     {

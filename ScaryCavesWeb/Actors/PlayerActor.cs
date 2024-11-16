@@ -7,6 +7,9 @@ namespace ScaryCavesWeb.Actors;
 [Alias("ScaryCavesWeb.Actors.IPlayerActor")]
 public interface IPlayerActor : IGrainWithStringKey
 {
+    [Alias("GetAccountId")]
+    Task<Guid?> GetAccountId();
+
     /// <summary>
     /// Begin a play session; track the connectionId for updates
     /// </summary>
@@ -42,7 +45,7 @@ public interface IPlayerActor : IGrainWithStringKey
 
 public class PlayerActor(ILogger<PlayerActor> logger,
     ScaryCaveSettings settings,
-    [PersistentState(nameof(Player))] IPersistentState<Player> playerState) : Grain, IPlayerActor
+    [PersistentState(nameof(Player), ScaryCaveSettings.PlayerStorageProvider)] IPersistentState<Player> playerState) : Grain, IPlayerActor
 {
     private ILogger<PlayerActor> Logger { get; } = logger;
     public ScaryCaveSettings Settings { get; } = settings;
@@ -59,6 +62,11 @@ public class PlayerActor(ILogger<PlayerActor> logger,
         PlayerState.State  = new Player(ownerAccountId, this.GetPrimaryKeyString(),  Settings.DefaultRoomId, Settings.DefaultZoneName, null);
         await PlayerState.WriteStateAsync();
         return true;
+    }
+
+    public Task<Guid?> GetAccountId()
+    {
+        return Task.FromResult<Guid?>(PlayerState.RecordExists ? Player.OwnerAccountId : null);
     }
 
     public async Task<ClientPlayerView> BeginSession(string connectionId)

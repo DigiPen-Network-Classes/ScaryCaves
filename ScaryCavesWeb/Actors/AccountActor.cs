@@ -1,4 +1,5 @@
 using ScaryCavesWeb.Models;
+using ScaryCavesWeb.Services;
 
 namespace ScaryCavesWeb.Actors;
 
@@ -20,7 +21,7 @@ public interface IAccountActor : IGrainWithGuidKey
 
 public class AccountActor(
     ILogger<AccountActor> logger,
-    [PersistentState(nameof(Account))] IPersistentState<Account> accountState) : Grain, IAccountActor
+    [PersistentState(nameof(Account), ScaryCaveSettings.AccountStorageProvider)] IPersistentState<Account> accountState) : Grain, IAccountActor
 {
     private ILogger<AccountActor> Logger { get; } = logger;
     private IPersistentState<Account> AccountState { get; } = accountState;

@@ -22,7 +22,6 @@ public static class ServiceDependency
         services.AddSingleton<IPasswordHasher<Account>, PasswordHasher<Account>>();
 
         // databases
-        services.AddSingleton<IAccountDatabase, AccountDatabase>();
         services.AddSingleton<IZoneDatabase, ZoneDatabase>(_ => ZoneDatabase.Build());
         services.AddSingleton<IWorldDatabase, WorldDatabase>();
 

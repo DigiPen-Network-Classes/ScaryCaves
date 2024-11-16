@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using ScaryCavesWeb.Actors;
 using ScaryCavesWeb.Models;
-using ScaryCavesWeb.Services.Databases;
 
 namespace ScaryCavesWeb.Services.Authentication;
 
@@ -11,19 +10,19 @@ public interface IAccountSession
     Task<Account?> Register(string accountName, string password);
 }
 
-public class AccountSession(ILogger<AccountSession> logger, IClusterClient clusterClient, IAccountDatabase accountDatabase, IPasswordHasher<Account> passwordHasher) : IAccountSession
+public class AccountSession(ILogger<AccountSession> logger, IClusterClient clusterClient, IPasswordHasher<Account> passwordHasher) : IAccountSession
 {
     private ILogger<AccountSession> Logger { get; } = logger;
-    private IAccountDatabase AccountDatabase { get; } = accountDatabase;
     private IPasswordHasher<Account> PasswordHasher { get; } = passwordHasher;
     private IClusterClient ClusterClient { get; } = clusterClient;
 
-    public async Task<Account?> Login(string accountName, string password)
+    public async Task<Account?> Login(string playerName, string password)
     {
-        // find account by username:
-        var accountId = await AccountDatabase.GetAccountId(accountName);
+        // find account id by username:
+        var accountId = await ClusterClient.GetGrain<IPlayerActor>(playerName).GetAccountId();
         if (accountId == null)
         {
+            Logger.LogWarning("Login attempt for {PlayerName}: No Account found", playerName);
             return null;
         }
 
@@ -31,30 +30,28 @@ public class AccountSession(ILogger<AccountSession> logger, IClusterClient clust
         var result = PasswordHasher.VerifyHashedPassword(account, account.HashedPassword, password);
         if (result != PasswordVerificationResult.Success)
         {
+            Logger.LogWarning("Login attempt for {PlayerName}: Password fail", playerName);
             return null;
         }
+        Logger.LogDebug("Login Attempt for {PlayerName}: Success", playerName);
         return await ClusterClient.GetGrain<IAccountActor>(accountId.Value).Login();
     }
 
-    public async Task<Account?> Register(string accountName, string password)
+    public async Task<Account?> Register(string playerName, string password)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(password);
-        ArgumentException.ThrowIfNullOrWhiteSpace(accountName);
-
-        var existingAccountId = await AccountDatabase.GetAccountId(accountName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(playerName);
+/*
+        var existingAccountId = await ClusterClient.GetGrain<IPlayerActor>(playerName).GetAccountId();
         if (existingAccountId != null)
         {
             // already got one
-            Logger.LogInformation("account {AccountName} already exists: {AccountId}", accountName, existingAccountId);
+            Logger.LogWarning("Register: Player {PlayerName} already exists", playerName);
             return null;
         }
-        var newAccount = new Account(Guid.NewGuid(), accountName);
+        */
+        var newAccount = new Account(Guid.NewGuid(), playerName);
         newAccount.HashedPassword = PasswordHasher.HashPassword(newAccount, password);
-        var result = await ClusterClient.GetGrain<IAccountActor>(newAccount.Id).Register(newAccount);
-        if (result != null)
-        {
-            return await AccountDatabase.SetAccountId(accountName, newAccount.Id) == false ? null : result;
-        }
-        return null;
+        return await ClusterClient.GetGrain<IAccountActor>(newAccount.Id).Register(newAccount);
     }
 }

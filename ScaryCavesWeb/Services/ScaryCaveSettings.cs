@@ -3,6 +3,10 @@ namespace ScaryCavesWeb.Services;
 
 public class ScaryCaveSettings
 {
+    public const string AccountStorageProvider = "accounts-player-storage";
+    public const string PlayerStorageProvider = AccountStorageProvider;
+
+
     private const int defaultSeconds = 300;
     public int? DefaultTimeToLive { get; set; }
 
