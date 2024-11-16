@@ -43,13 +43,11 @@ public class Player : IMobile
     /// <summary>
     /// Determine if the Player has deserialized into a valid state.
     /// </summary>
+    /// <param name="player"></param>
     /// <param name="ownerAccountId">must not be Guid.Empty</param>
     /// <returns>true if things are good, false otherwise</returns>
-    public bool IsValid(Guid ownerAccountId)
+    public static bool IsValid(Player? player, Guid ownerAccountId)
     {
-        // would fail the check anyway, but lets throw to catch this early if it happens:
-        ArgumentOutOfRangeException.ThrowIfEqual(ownerAccountId, Guid.Empty);
-        // determine that we've deserialized this into a valid state:
-        return !string.IsNullOrEmpty(Name) && OwnerAccountId != Guid.Empty && OwnerAccountId == ownerAccountId;
+        return !string.IsNullOrEmpty(player?.Name) && player.OwnerAccountId != Guid.Empty && player.OwnerAccountId == ownerAccountId;
     }
 }

@@ -32,7 +32,7 @@ public class AccountActor(
         if (AccountState.RecordExists)
         {
             Logger.LogWarning("Registering account {AccountId} - {NewAccountName} that already exists", this.GetPrimaryKey(), newAccount.PlayerName);
-            // do it anyway...
+            // do it anyway ...?
         }
         else
         {

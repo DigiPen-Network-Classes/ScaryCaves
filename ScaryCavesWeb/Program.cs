@@ -4,24 +4,19 @@ using ScaryCavesWeb.Hubs;
 using ScaryCavesWeb.Services;
 using StackExchange.Redis;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
-// settings
-var settings = new ScaryCaveSettings();
-builder.Configuration.Bind("ScaryCaves", settings);
-builder.Services.AddSingleton(settings);
-/*
-// redis connection - used for accounts (until we move it to mongodb)
-var redisConnectionString = builder.Configuration.GetSection("Redis:ConnectionString").Value;
-var redisConn = ConnectionMultiplexer.Connect(redisConnectionString!);
-builder.Services.AddSingleton<IConnectionMultiplexer>(redisConn);
-builder.Services.AddScoped<IDatabase>(sp => sp.GetRequiredService<IConnectionMultiplexer>().GetDatabase());
-*/
-// use mongodb for accounts and players
-
+var scaryCaveSettings = new ScaryCaveSettings();
+builder.Configuration.Bind("ScaryCave", scaryCaveSettings);
+builder.Services.AddSingleton(scaryCaveSettings);
 
 builder.Host.UseOrleans(static siloBuilder =>
 {
+    // re-fetch the settings for orleans:
+    var scaryCaveSettings = new ScaryCaveSettings();
+    siloBuilder.Configuration.Bind("ScaryCave", scaryCaveSettings);
+
     // orleans configures its own logging:
     siloBuilder.ConfigureLogging(logging =>
     {
@@ -36,22 +31,31 @@ builder.Host.UseOrleans(static siloBuilder =>
     });
 
     siloBuilder.UseLocalhostClustering();
-    siloBuilder.UseMongoDBClient("mongodb://scarycaveuser:scarycave@bertrand.meancat.org:27017");
-    siloBuilder.AddMongoDBGrainStorage(ScaryCaveSettings.AccountStorageProvider, options =>
+    // Accounts and Players expire after "config seconds"
+    siloBuilder.AddRedisGrainStorage(ScaryCaveSettings.AccountStorageProvider, options =>
     {
-        options.DatabaseName = "scarycavedb";
+        options.EntryExpiry = scaryCaveSettings.AccountExpires;
+        options.ConfigurationOptions = new ConfigurationOptions
+        {
+            DefaultDatabase = 1,
+            EndPoints =
+            {
+                scaryCaveSettings.RedisConnectionString
+            },
+            AbortOnConnectFail = false,
+        };
     });
-
-    // everything else is stored in redis
+    // everything else is stored in redis without expiration (and it doesn't grow over time)
     siloBuilder.AddRedisGrainStorageAsDefault(options =>
     {
         options.ConfigurationOptions = new ConfigurationOptions
         {
+            DefaultDatabase = 0,
             EndPoints =
             {
-                "localhost:6379"
+                scaryCaveSettings.RedisConnectionString
             },
-            AbortOnConnectFail = false,
+            AbortOnConnectFail = false
         };
     });
 });
@@ -65,7 +69,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         options.LoginPath = "/Home/Login";
         options.AccessDeniedPath = "/Home/Login";
-        options.ExpireTimeSpan = settings.PlayerExpires;
+        options.ExpireTimeSpan = scaryCaveSettings.AccountExpires;
     });
 builder.Services.AddAuthorization();
 

@@ -36,9 +36,23 @@ public class GameHub(ILogger<GameHub> logger, IClusterClient clusterClient) : Hu
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        Logger.LogInformation("Goodbye Player {PlayerName}", PlayerName);
-        var room = await ClusterClient.GetGrain<IPlayerActor>(PlayerName).EndSession();
-        Logger.LogInformation("Player {PlayerName} end session; left {RoomId}", PlayerName, room?.Id);
+        var playerName = PlayerName;
+        if (string.IsNullOrEmpty(playerName))
+        {
+            Logger.LogInformation("Null Player, so not ending session, bye.");
+            return;
+        }
+        Logger.LogInformation("Goodbye Player {PlayerName}", playerName);
+        try
+        {
+            var room = await ClusterClient.GetGrain<IPlayerActor>(playerName).EndSession();
+            Logger.LogInformation("Player {PlayerName} end session; left {RoomId}", playerName, room?.Id);
+        }
+        catch (Exception e)
+        {
+            Logger.LogError(e, "Error ending session for {PlayerName}", PlayerName);
+        }
+
         await base.OnDisconnectedAsync(exception);
     }
 
@@ -57,16 +71,26 @@ public class GameHub(ILogger<GameHub> logger, IClusterClient clusterClient) : Hu
         }
 
         Logger.LogInformation("Player {PlayerName} wants to go {Direction}", PlayerName, d);
-        var destinationRoom = await ClusterClient.GetGrain<IPlayerActor>(PlayerName).MoveTo(d);
-        if (destinationRoom == null)
+        try
         {
-            Logger.LogInformation("Player {PlayerName} tried to go {Direction} but was not allowed to.", PlayerName, d);
-            await Clients.Caller.SendAsync("ReceiveMessage", "You can't go that way!");
+            var destinationRoom = await ClusterClient.GetGrain<IPlayerActor>(PlayerName).MoveTo(d);
+            if (destinationRoom == null)
+            {
+                Logger.LogInformation("Player {PlayerName} tried to go {Direction} but was not allowed to.", PlayerName, d);
+                await Clients.Caller.SendAsync("ReceiveMessage", "You can't go that way!");
+                return null;
+            }
+
+            var roomState = new ClientPlayerView(new Player(AccountId, PlayerName ?? "", destinationRoom.Id, destinationRoom.ZoneName, Context.ConnectionId), destinationRoom);
+            await Clients.Caller.SendAsync("UpdatePlayerView", roomState);
+            return roomState;
+        }
+        catch (Exception e)
+        {
+            Logger.LogError(e, "Error moving player {PlayerName} {Direction}, good bye", PlayerName, d);
+            await Clients.Caller.SendAsync("ReceiveMessage", "Error moving player");
+            Context.Abort();
             return null;
         }
-
-        var roomState = new ClientPlayerView(new Player(AccountId, PlayerName ?? "", destinationRoom.Id, destinationRoom.ZoneName, Context.ConnectionId), destinationRoom);
-        await Clients.Caller.SendAsync("UpdatePlayerView", roomState);
-        return roomState;
     }
 }

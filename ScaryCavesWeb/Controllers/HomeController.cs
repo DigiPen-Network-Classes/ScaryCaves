@@ -44,7 +44,7 @@ public class HomeController(
         }
 
         // create the auth cookie
-        await HttpContext.ScaryCaveSignIn(account, DateTime.UtcNow.Add(Settings.PlayerExpires));
+        await HttpContext.ScaryCaveSignIn(account, DateTime.UtcNow.Add(Settings.AccountExpires));
         return Ok();
     }
 
@@ -79,7 +79,7 @@ public class HomeController(
         {
             return BadRequest();
         }
-        await HttpContext.ScaryCaveSignIn(account, DateTime.UtcNow.Add(Settings.PlayerExpires));
+        await HttpContext.ScaryCaveSignIn(account, DateTime.UtcNow.Add(Settings.AccountExpires));
         return Ok();
     }
 

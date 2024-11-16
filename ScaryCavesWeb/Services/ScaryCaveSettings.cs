@@ -7,15 +7,17 @@ public class ScaryCaveSettings
     public const string PlayerStorageProvider = AccountStorageProvider;
 
 
-    private const int defaultSeconds = 300;
-    public int? DefaultTimeToLive { get; set; }
+    private const int DefaultTimeToLiveSeconds = 300;
+    public int? AccountTimeToLiveSeconds { get; set; }
 
     public string DefaultZoneName { get; set; } = "scary-cave";
-    public long DefaultRoomId { get; set; }
+    public long DefaultRoomId { get; set; } = 0;
+
+    public string RedisConnectionString { get; set; } = "";
 
     /// <summary>
-    /// How long do player records stay around?
-    /// After this point they are deleted, so auth should be tied to this too.
+    /// How long do account records (and therefore, Player records) stay around?
+    /// After this point they are deleted
     /// </summary>
-    public TimeSpan PlayerExpires => TimeSpan.FromSeconds(DefaultTimeToLive ?? defaultSeconds);
+    public TimeSpan AccountExpires => TimeSpan.FromSeconds(AccountTimeToLiveSeconds ?? DefaultTimeToLiveSeconds);
 }
