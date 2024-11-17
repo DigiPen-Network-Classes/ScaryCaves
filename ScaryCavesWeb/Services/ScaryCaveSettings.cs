@@ -26,4 +26,7 @@ public class ScaryCaveSettings
     /// After this point they are deleted
     /// </summary>
     public TimeSpan AccountExpires => TimeSpan.FromSeconds(AccountTimeToLiveSeconds ?? DefaultTimeToLiveSeconds);
+
+    public string ReCaptchaSecretKey { get; set; } = "";
+    public float ReCaptchaScoreThreshold { get; set; } = 0.5f;
 }

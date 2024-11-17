@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using ScaryCavesWeb.Hubs;
 using ScaryCavesWeb.Services;
+using ScaryCavesWeb.Services.Authentication;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +10,9 @@ var builder = WebApplication.CreateBuilder(args);
 var scaryCaveSettings = new ScaryCaveSettings();
 builder.Configuration.Bind("ScaryCave", scaryCaveSettings);
 builder.Services.AddSingleton(scaryCaveSettings);
+
+builder.Services.AddHttpClient();
+builder.Services.AddTransient<IReCaptchaService, ReCaptchaService>();
 
 builder.Host.UseOrleans(static siloBuilder =>
 {

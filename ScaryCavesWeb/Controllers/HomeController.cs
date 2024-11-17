@@ -13,18 +13,19 @@ namespace ScaryCavesWeb.Controllers;
 
 /// <summary>
 /// TODO: add auth with oauth/google
-/// TODO: add captcha to register / login
 /// </summary>
 public class HomeController(
     ILogger<HomeController> logger,
     ScaryCaveSettings settings,
     IClusterClient clusterClient,
-    IAccountSession accountSession) : Controller
+    IAccountSession accountSession,
+    IReCaptchaService captchaService) : Controller
 {
     private IAccountSession AccountSession { get; } = accountSession;
     private ILogger<HomeController> Logger { get; } = logger;
     private ScaryCaveSettings Settings { get; } = settings;
     private IClusterClient ClusterClient { get; } = clusterClient;
+    private IReCaptchaService CaptchaService { get; } = captchaService;
 
     private string? PlayerName =>  User.FindFirst(ClaimTypes.Name)?.Value;
     private Guid? AccountId => User.FindFirst(ClaimTypes.NameIdentifier) is { Value: { } id } ? Guid.Parse(id) : null;
@@ -32,10 +33,17 @@ public class HomeController(
     [HttpPost]
     public async Task<IActionResult> Login([FromBody] LoginModel model)
     {
-        if (!ModelState.IsValid || string.IsNullOrEmpty(model.PlayerName) || string.IsNullOrEmpty(model.Password))
+        if (!ModelState.IsValid || string.IsNullOrEmpty(model.PlayerName) || string.IsNullOrEmpty(model.Password) || string.IsNullOrEmpty(model.Token))
         {
             return BadRequest();
         }
+
+        var isValid = await CaptchaService.IsTokenValid(model.Token);
+        if (!isValid)
+        {
+            return BadRequest();
+        }
+
         Logger.LogDebug("login attempt for '{PlayerName}'", model.PlayerName);
         var account = await AccountSession.Login(model.PlayerName, model.Password);
         if (account == null)
@@ -51,11 +59,15 @@ public class HomeController(
     public async Task<IActionResult> Logout()
     {
         var g = AccountId;
-        if (g != null)
+        if ((g ?? Guid.Empty) == Guid.Empty)
         {
+            Logger.LogWarning("Logout Request without account id");
+        }
+        else
+        {
+            Logger.LogInformation("Logout Request for '{PlayerName}'", PlayerName);
             await ClusterClient.GetGrain<IAccountActor>(g.Value).Logout();
         }
-
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return Ok();
     }
@@ -69,7 +81,13 @@ public class HomeController(
     [HttpPost]
     public async Task<IActionResult> Register([FromBody] RegisterModel model)
     {
-        if (!ModelState.IsValid || string.IsNullOrEmpty(model.PlayerName) || string.IsNullOrEmpty(model.Password))
+        if (!ModelState.IsValid || string.IsNullOrEmpty(model.PlayerName) || string.IsNullOrEmpty(model.Password) || string.IsNullOrEmpty(model.Token))
+        {
+            return BadRequest();
+        }
+
+        var isValid = await CaptchaService.IsTokenValid(model.Token);
+        if (!isValid)
         {
             return BadRequest();
         }
@@ -77,7 +95,7 @@ public class HomeController(
         var account =  await AccountSession.Register(model.PlayerName, model.Password);
         if (account == null)
         {
-            return BadRequest();
+            return Unauthorized();
         }
         await HttpContext.ScaryCaveSignIn(account, DateTime.UtcNow.Add(Settings.AccountExpires));
         return Ok();
@@ -102,9 +120,6 @@ public class HomeController(
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {
-        return View(new ErrorViewModel
-        {
-            RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
-        });
+        return BadRequest(Activity.Current?.Id ?? HttpContext.TraceIdentifier);
     }
 }

@@ -134,7 +134,7 @@
     {
       "DefinitionId": "vault_guard",
       "Name": "Guard",
-      "Description": "A Guard stands here, looking bored.",
+      "Description": "A guard stands here, looking bored.",
       "Movement": {
         "Type": "Stationary",
         "Chance": 0.0
