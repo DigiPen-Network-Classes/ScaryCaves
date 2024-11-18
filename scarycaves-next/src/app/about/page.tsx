@@ -19,8 +19,7 @@ const AboutPage = () => {
                 <li><a href="https://dotnet.microsoft.com/en-us/apps/aspnet">Asp.Net Core</a> for the Server API</li>
                 <li><a href="https://learn.microsoft.com/en-us/dotnet/orleans/overview">Microsoft Orleans</a> - for managing game state</li>
                 <li><a href="https://nextjs.org">next.js and React</a> - SPA and Client</li>
-                <li><a href="https://redis.io">Redis</a> - Game State Database</li>
-                <li><a href="https://mongodb.com">MongoDB</a> - Accounts and Players Database</li>
+                <li><a href="https://redis.io">Redis</a> - Game Database</li>
             </ul>
             <br/>
         </div>

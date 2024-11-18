@@ -28,7 +28,8 @@ const RegisterPageContent = () => {
         }
         executeRecaptcha("register").then(async (token) => {
 
-            const response = await fetch('http://localhost:8000/Home/Register', {
+            const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+            const response = await fetch(`${apiBaseUrl}/Home/Register`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 credentials: 'include',

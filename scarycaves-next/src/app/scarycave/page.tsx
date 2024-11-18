@@ -37,11 +37,12 @@ const RoomPage : React.FC = () => {
     const [messages, setMessages] = useState<string[]>([]);
 
     useEffect(() => {
+        const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
         // initialize SignalR connection, if authorized
         if (!connectionRef.current) {
             // only once
             const connection = new HubConnectionBuilder()
-                .withUrl("http://localhost:8000/GameHub", {withCredentials: true})
+                .withUrl(`${apiBaseUrl}/GameHub`, {withCredentials: true})
                 .withAutomaticReconnect()
                 .build();
             connectionRef.current = connection;
@@ -55,9 +56,10 @@ const RoomPage : React.FC = () => {
             };
             const startConnection = async () => {
                 // see if we are already authenticated - if not redirect without connection attempt
+                const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
                 try {
                     console.log("Check Status to see if we are logged in");
-                    const statusResponse = await fetch('http://localhost:8000/Home/Status', {credentials: 'include'});
+                    const statusResponse = await fetch(`${apiBaseUrl}/Home/Status`, {credentials: 'include'});
                     if (!statusResponse.ok) {
                         console.log("Not logged in, redirecting to login");
                         router.push('/login');

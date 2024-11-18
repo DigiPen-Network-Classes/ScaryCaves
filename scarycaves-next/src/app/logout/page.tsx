@@ -6,7 +6,8 @@ const LogoutPage = () => {
     const router = useRouter();
     useEffect(() => {
             const logout  =async () => {
-                const response = await fetch('http://localhost:8000/Home/Logout', {
+                const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+                const response = await fetch(`${apiBaseUrl}/Home/Logout`, {
                     method: 'POST',
                     credentials: 'include'
                 });

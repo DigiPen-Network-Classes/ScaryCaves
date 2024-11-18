@@ -26,8 +26,9 @@ const LoginPageContent = () => {
             return;
         }
         executeRecaptcha("login").then(async (token) => {
+            const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
-            const response = await fetch('http://localhost:8000/Home/Login', {
+            const response = await fetch(`${apiBaseUrl}/Home/Login`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 credentials: 'include',
