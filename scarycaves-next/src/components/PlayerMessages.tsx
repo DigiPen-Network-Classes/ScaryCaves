@@ -1,4 +1,3 @@
-import react from 'react';
 
 interface PlayerMessagesProps {
     messages: string[];

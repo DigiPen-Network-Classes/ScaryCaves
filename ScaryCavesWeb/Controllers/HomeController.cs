@@ -58,15 +58,15 @@ public class HomeController(
 
     public async Task<IActionResult> Logout()
     {
-        var g = AccountId;
-        if ((g ?? Guid.Empty) == Guid.Empty)
+        var g = AccountId ?? Guid.Empty;
+        if (g == Guid.Empty)
         {
             Logger.LogWarning("Logout Request without account id");
         }
         else
         {
             Logger.LogInformation("Logout Request for '{PlayerName}'", PlayerName);
-            await ClusterClient.GetGrain<IAccountActor>(g.Value).Logout();
+            await ClusterClient.GetGrain<IAccountActor>(g).Logout();
         }
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return Ok();

@@ -42,6 +42,13 @@ public class AccountSession(ILogger<AccountSession> logger, IClusterClient clust
         ArgumentException.ThrowIfNullOrWhiteSpace(password);
         ArgumentException.ThrowIfNullOrWhiteSpace(playerName);
 
+        var exists = await ClusterClient.GetGrain<IPlayerActor>(playerName).Exists();
+        if (exists)
+        {
+            Logger.LogWarning("Attempt to register existing player {PlayerName} (already exists)", playerName);
+            return null;
+        }
+
         var newAccount = new Account(Guid.NewGuid(), playerName);
         newAccount.HashedPassword = PasswordHasher.HashPassword(newAccount, password);
         return await ClusterClient.GetGrain<IAccountActor>(newAccount.Id).Register(newAccount);

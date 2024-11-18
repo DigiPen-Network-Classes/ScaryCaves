@@ -7,8 +7,19 @@ namespace ScaryCavesWeb.Actors;
 [Alias("ScaryCavesWeb.Actors.IPlayerActor")]
 public interface IPlayerActor : IGrainWithStringKey
 {
+    /// <summary>
+    /// Get the AccountID associated with this Player, if it exists
+    /// </summary>
+    /// <returns>AccountID or null if there isn't one</returns>
     [Alias("GetAccountId")]
     Task<Guid?> GetAccountId();
+
+    /// <summary>
+    /// Determine if the player identified by this name exists in the database.
+    /// </summary>
+    /// <returns>true if it does, false othewrise</returns>
+    [Alias("Exists")]
+    Task<bool> Exists();
 
     /// <summary>
     /// Begin a play session; track the connectionId for updates
@@ -58,6 +69,11 @@ public class PlayerActor(ILogger<PlayerActor> logger,
         PlayerState.State  = new Player(ownerAccountId, this.GetPrimaryKeyString(),  Settings.DefaultRoomId, Settings.DefaultZoneName, null);
         await PlayerState.WriteStateAsync();
         return true;
+    }
+
+    public Task<bool> Exists()
+    {
+        return Task.FromResult(PlayerState.RecordExists);
     }
 
     public Task<Guid?> GetAccountId()

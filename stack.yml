@@ -1,0 +1,56 @@
+version: "3.9"
+
+services:
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    deploy:
+      replicas: 1
+
+  scary_aspnet:
+    secrets:
+      - recaptcha_secret_key
+      - dp-cert.pfx
+      - dp_cert_password
+    environment:
+      - ASPNETCORE_URLS=http://0.0.0.0:8000
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ScaryCave__RedisConnectionString=redis:6379
+      - ScaryCave__ReCaptchaSecretKeyFile=/run/secrets/recaptcha_secret_key
+      - ScaryCave__DataProtectionKeyPath=/var/data_protection_keys
+      - ScaryCave__DataProtectionCertFile=/run/secrets/dp-cert.pfx
+      - ScaryCave__DataProtectionCertPasswordFile=/run/secrets/dp_cert_password
+    volumes:
+      - data_protection:/var/data_protection_keys
+    image: scary_aspnet
+    ports:
+      - "8000:8000"
+    deploy:
+      replicas: 1
+    depends_on:
+      - redis
+
+  scary_next:
+    secrets:
+      - recaptcha_secret_key
+    environment:
+      - NEXT_PUBLIC_RECAPTCHA_SITE_KEY_FILE=/run/secrets/recaptcha_secret_key
+    image: scary_next
+    ports:
+      - "3000:3000"
+    deploy:
+      replicas: 1
+    depends_on:
+      - scary_aspnet
+
+volumes:
+  data_protection:
+
+secrets:
+  recaptcha_secret_key:
+    external: true
+  dp-cert.pfx:
+    external: true
+  dp_cert_password:
+    external: true

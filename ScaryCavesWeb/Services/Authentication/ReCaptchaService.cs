@@ -20,7 +20,7 @@ public class ReCaptchaService(ILogger<ReCaptchaService> logger, ScaryCaveSetting
         {
             Content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                ["secret"] = Settings.ReCaptchaSecretKey,
+                ["secret"] = Settings.ReadReCaptchaSecretKey(),
                 ["response"] = token
             })
         };

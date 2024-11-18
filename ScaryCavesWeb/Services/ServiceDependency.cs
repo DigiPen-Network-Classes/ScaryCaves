@@ -1,8 +1,10 @@
 
 using System.Security.Claims;
 using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using ScaryCavesWeb.Models;
 using ScaryCavesWeb.Services.Authentication;
@@ -12,8 +14,37 @@ namespace ScaryCavesWeb.Services;
 
 public static class ServiceDependency
 {
+    public static IDataProtectionBuilder AddScaryDataProtection(this IServiceCollection services, ScaryCaveSettings settings)
+    {
+        /*
+        Console.WriteLine($"DataProtectionKeyPath: {settings.DataProtectionKeyPath}");
+        Console.WriteLine($"DataProtectionCertFile: {settings.DataProtectionCertFile}");
+        Console.WriteLine($"password from settings: {settings.DataProtectionCertPassword}");
+        Console.WriteLine($"password from secret file: '{settings.ReadDataProtectionCertPassword()}'");
+        */
+
+        var dataProtectionPath = new DirectoryInfo(settings.DataProtectionKeyPath);
+        if (!dataProtectionPath.Exists)
+        {
+            dataProtectionPath.Create();
+        }
+        if (!File.Exists(settings.DataProtectionCertFile))
+        {
+            throw new FileNotFoundException("DataProtectionCertFile not found", settings.DataProtectionCertFile);
+        }
+
+        var certificate = new X509Certificate2(settings.DataProtectionCertFile, settings.ReadDataProtectionCertPassword());
+
+        return services.AddDataProtection()
+            .PersistKeysToFileSystem(dataProtectionPath)
+            .ProtectKeysWithCertificate(certificate);
+    }
+
     public static IServiceCollection AddScaryCaveWeb(this IServiceCollection services)
     {
+        // google recaptcha checker
+        services.AddTransient<IReCaptchaService, ReCaptchaService>();
+
         services.AddSingleton(RandomNumberGenerator.Create());
         services.AddSingleton<IRandomService, RandomService>();
 

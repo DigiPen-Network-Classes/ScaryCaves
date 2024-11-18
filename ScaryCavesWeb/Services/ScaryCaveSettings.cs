@@ -27,6 +27,44 @@ public class ScaryCaveSettings
     /// </summary>
     public TimeSpan AccountExpires => TimeSpan.FromSeconds(AccountTimeToLiveSeconds ?? DefaultTimeToLiveSeconds);
 
+    public string ReCaptchaSecretKeyFile { get; set; } = "";
     public string ReCaptchaSecretKey { get; set; } = "";
     public float ReCaptchaScoreThreshold { get; set; } = 0.5f;
+
+    public string DataProtectionKeyPath { get; set; } = "./certs";
+    public string DataProtectionCertFile { get; set; } = "./certs/dp-cert.pfx";
+    public string DataProtectionCertPasswordFile { get; set; } = "";
+    public string DataProtectionCertPassword { get; set; } = "";
+
+    public string ReadReCaptchaSecretKey()
+    {
+        if (!string.IsNullOrEmpty(ReCaptchaSecretKey))
+        {
+            Console.WriteLine("Using ReCaptchaSecretKey from settings (length: {0})", ReCaptchaSecretKey.Length);
+            return ReCaptchaSecretKey;
+        }
+
+        if (!File.Exists(ReCaptchaSecretKeyFile))
+        {
+            throw new FileNotFoundException("ReCaptchaSecretKeyFile not found", ReCaptchaSecretKeyFile);
+        }
+
+        Console.WriteLine($"Reading Recaptcha secret from {ReCaptchaSecretKeyFile}");
+        return File.ReadAllText(ReCaptchaSecretKeyFile);
+    }
+
+    public string ReadDataProtectionCertPassword()
+    {
+        if (!string.IsNullOrEmpty(DataProtectionCertPassword))
+        {
+            Console.WriteLine("*** Using DataProtectionCertPassword from settings (length: {0})", DataProtectionCertPassword.Length);
+            return DataProtectionCertPassword;
+        }
+        if (!File.Exists(DataProtectionCertPasswordFile))
+        {
+            throw new FileNotFoundException("DataProtectionCertPasswordFile not found", DataProtectionCertPasswordFile);
+        }
+        Console.WriteLine($"Reading cert password from {DataProtectionCertPasswordFile}");
+        return File.ReadAllText(DataProtectionCertPasswordFile);
+    }
 }
