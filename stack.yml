@@ -6,8 +6,8 @@ services:
     volumes:
       - redis_data:/data
     command: ["redis-server", "--save", "60", "1", "--appendonly", "yes"]
-    ports:
-      - "6379:6379"
+    networks:
+      - scary_net
     deploy:
       replicas: 1
 
@@ -29,6 +29,8 @@ services:
     image: trasa/scary_aspnet:latest
     ports:
       - "8000:8000"
+    networks:
+      - scary_net
     deploy:
       replicas: 1
     depends_on:
@@ -40,6 +42,8 @@ services:
     environment:
       - NEXT_PUBLIC_RECAPTCHA_SITE_KEY_FILE=/run/secrets/recaptcha_secret_key
     image: trasa/scary_next:latest
+    networks:
+      - scary_net
     ports:
       - "3000:3000"
     deploy:
@@ -50,6 +54,10 @@ services:
 volumes:
   data_protection:
   redis_data:
+    
+networks:
+  scary_net:
+    driver: overlay
 
 secrets:
   recaptcha_secret_key:

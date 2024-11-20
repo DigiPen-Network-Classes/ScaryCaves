@@ -1,2 +1,2 @@
 #!/bin/bash
-docker stack deploy -c stack.yml scarycaves
+docker stack deploy --detach=true -c stack.yml scarycaves
