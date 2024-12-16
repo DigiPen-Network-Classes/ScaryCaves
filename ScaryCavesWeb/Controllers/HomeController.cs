@@ -8,12 +8,10 @@ using ScaryCavesWeb.Actors;
 using ScaryCavesWeb.Models;
 using ScaryCavesWeb.Services;
 using ScaryCavesWeb.Services.Authentication;
+using StackExchange.Redis;
 
 namespace ScaryCavesWeb.Controllers;
 
-/// <summary>
-/// TODO: add auth with oauth/google
-/// </summary>
 public class HomeController(
     ILogger<HomeController> logger,
     ScaryCaveSettings settings,
@@ -121,5 +119,27 @@ public class HomeController(
     public IActionResult Error()
     {
         return BadRequest(Activity.Current?.Id ?? HttpContext.TraceIdentifier);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Health()
+    {
+        var orleansHealth = false;
+        try
+        {
+            // Test Orleans connection by pinging a test grain
+            var testGrain = ClusterClient.GetGrain<ITestGrain>(0);
+            var grainResponse = await testGrain.Ping();
+            orleansHealth = grainResponse;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Health check failed!");
+        }
+        return Ok(new
+        {
+            redis = orleansHealth, // test grain tests redis too
+            orleans = orleansHealth
+        });
     }
 }
