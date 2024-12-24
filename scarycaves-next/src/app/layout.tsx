@@ -24,7 +24,8 @@ export default function RootLayout({
   </head>
   <body>
   <Navbar />
-  <div className="container">
+  <div className={"background-wrapper"}></div>
+  <div className="container" >
     <main role="main" className="pb-3">
       {children}
     </main>

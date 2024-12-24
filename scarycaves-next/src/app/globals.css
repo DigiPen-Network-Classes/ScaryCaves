@@ -28,7 +28,23 @@ html {
 
 body {
   font-family: "Comic Sans MS", sans-serif; /* you know it */
-  margin-bottom: 60px;
+  margin:  0 0 60px;
+  /*display: flex;
+  flex-direction: column;*/
+}
+
+
+.background-wrapper {
+  position: absolute;
+  top: 50px;
+  left: calc((100% - 1024px) / 2);
+  width: 1024px;
+  height: calc(100% - 100px);
+  background: url("/scary_cave_background.jpg") no-repeat center center;
+  background-size: cover;
+  overflow: hidden;
+  opacity: 0.1;
+  z-index: -1;
 }
 
 h1, h2, h3, h4 {
@@ -88,7 +104,7 @@ p.home-title {
 }
 
 a.navbar-brand {
-    color: #0077cc;
+  color: #0077cc;
   white-space: normal;
   text-align: center;
   word-break: break-all;
