@@ -13,7 +13,6 @@ export default function HealthPage() {
     useEffect(() => {
         const checkHealth = async() => {
             const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
-            let signalrHealth = false;
             try {
                 const response = await fetch(`${apiBaseUrl}/Home/Health`);
                 const apiHealthStatus = await response.json();
