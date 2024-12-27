@@ -1,12 +1,11 @@
 name: Deploy Production
 
 on:
-  workflow-dispatch:
-    branches: [ "production" ]
   push:
     branches: [ "production" ]
   pull_request:
     branches: [ "production" ]
+  workflow_dispatch: # allow from UI or API
 
 jobs:
   build:
@@ -51,4 +50,3 @@ jobs:
 
       - name: push next
         run: docker push trasa/scary_next:${{ env.VERSION }}
-        
