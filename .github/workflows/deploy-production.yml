@@ -46,6 +46,9 @@ jobs:
             username: ${{ secrets.DOCKER_USERNAME }}
             password: ${{ secrets.DOCKER_TOKEN }}
 
+      - name: docker images
+        run: docker images
+
       - name: push ASP.NET image
         run: docker push ${{ secrets.DOCKER_USERNAME }}/scary_aspnet:${{ env.VERSION }}
 
