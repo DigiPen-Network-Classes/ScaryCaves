@@ -1,9 +1,11 @@
 #!/bin/bash
+set -e
+
 echo "SSH-Deploy ScaryCaves version $VERSION"
 
-scp stack.yml "$DEPLOY_USERNAME@scarycaves.meancat.com":
+scp -v stack.yml $DEPLOY_USERNAME@scarycaves.meancat.com:
 
-ssh "$DEPLOY_USERNAME@scarycaves.meancat.com" <<"EOF"
+ssh -v $DEPLOY_USERNAME@scarycaves.meancat.com <<"EOF"
   echo "Pulling ScaryCaves version $VERSION"
   docker pull $DOCKER_USERNAME/scary_aspnet:$VERSION
   docker pull $DOCKER_USERNAME/scary_next:$VERSION
