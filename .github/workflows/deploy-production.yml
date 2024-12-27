@@ -7,6 +7,9 @@ on:
     branches: [ "production" ]
   workflow_dispatch: # allow from UI or API
 
+env:
+  VERSION: 1.0.${{ github.run_number }}
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -14,10 +17,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set version
-        id: version
-        run: echo "VERSION=1.0.${{ github.run_number }}" >> $GITHUB_ENV
-        
       - name: build aspnet
         run: docker build -t trasa/scary_aspnet:${{ env.VERSION }} ./ScaryCavesWeb
 
