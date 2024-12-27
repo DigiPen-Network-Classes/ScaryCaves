@@ -11,7 +11,7 @@ env:
   VERSION: 1.0.${{ github.run_number }}
 
 jobs:
-  build-push:
+  build-push-deploy:
     runs-on: [ubuntu-latest]
     steps:
       - name: Checkout code
@@ -39,3 +39,15 @@ jobs:
 
       - name: push Next.js image
         run: docker push ${{ secrets.DOCKER_USERNAME }}/scary_next:${{ env.VERSION }}
+
+      - name: Prepare SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+            ssh-private-key: ${{ secrets.DO_DEPLOY_PRIVATE_KEY }}
+
+      - name: Deploy Stack
+        run: |
+          export VERSION=${{ env.VERSION }}
+          export DEPLOY_USERNAME=${{ secrets.DEPLOY_USERNAME }}
+          export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
+          ./deploy_remote.sh
