@@ -1,0 +1,31 @@
+name: Deploy to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      scary_version:
+        description: 'Version of the application'
+        required: true
+        default: '1.0.0'
+
+env:
+  VERSION: 1.0.${{ github.event.inputs.scary_version }}
+
+jobs:
+  deploy:
+    runs-on: [ubuntu-latest]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Prepare SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+            ssh-private-key: ${{ secrets.DO_DEPLOY_PRIVATE_KEY }}
+
+      - name: Deploy Stack
+        run: |
+          export VERSION=${{ env.VERSION }}
+          export DEPLOY_USERNAME=${{ secrets.DEPLOY_USERNAME }}
+          export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
+          ./deploy_remote.sh
