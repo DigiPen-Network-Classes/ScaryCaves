@@ -18,14 +18,14 @@ jobs:
         uses: actions/checkout@v4
 
       - name: build aspnet
-        run: docker build -t trasa/scary_aspnet:${{ env.VERSION }} ./ScaryCavesWeb
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/scary_aspnet:${{ env.VERSION }} ./ScaryCavesWeb
 
       - name: build next
         run: >
           docker build 
           --build-arg NEXT_PUBLIC_BASE_URL=https://scarycaves.meancat.com 
           --build-arg NEXT_PUBLIC_API_BASE_URL=https://scarycaves.meancat.com/api 
-          -t trasa/scary_next:${{ env.VERSION }} ./scarycaves-next
+          -t ${{ secrets.DOCKER_USERNAME }}/scary_next:${{ env.VERSION }} ./scarycaves-next
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -55,8 +55,14 @@ jobs:
             username: ${{ secrets.DOCKER_USERNAME }}
             password: ${{ secrets.DOCKER_TOKEN }}
 
+      - name: Tag aspnet
+        run: docker tag ${{ secrets.DOCKER_USERNAME }}/scary_aspnet:${{ env.VERSION }} ${{ secrets.DOCKER_USERNAME }}/scary_aspnet:${{ env.VERSION }}
+
+      - name: Tag next
+        run: docker tag ${{ secrets.DOCKER_USERNAME }}/scary_next:${{ env.VERSION }} ${{ secrets.DOCKER_USERNAME }}/scary_next:${{ env.VERSION }}
+
       - name: push aspnet
-        run: docker push trasa/scary_aspnet:${{ env.VERSION }}
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/scary_aspnet:${{ env.VERSION }}
 
       - name: push next
-        run: docker push trasa/scary_next:${{ env.VERSION }}
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/scary_next:${{ env.VERSION }}
