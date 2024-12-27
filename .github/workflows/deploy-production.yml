@@ -1,6 +1,8 @@
 name: Deploy Production
 
 on:
+  workflow-dispatch:
+    branches: [ "production" ]
   push:
     branches: [ "production" ]
   pull_request:
