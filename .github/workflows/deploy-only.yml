@@ -23,9 +23,13 @@ jobs:
         with:
             ssh-private-key: ${{ secrets.DO_DEPLOY_PRIVATE_KEY }}
 
+      - name: Verify SSH keys
+        run: ssh-add -l
+
       - name: Deploy Stack
-        run: |
-          export VERSION=${{ env.VERSION }}
-          export DEPLOY_USERNAME=${{ secrets.DEPLOY_USERNAME }}
-          export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
-          ./deploy_remote.sh
+        env:
+            VERSION: ${{ env.VERSION }}
+            DEPLOY_USERNAME: ${{ secrets.DEPLOY_USERNAME }}
+            DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+            SSH_AUTH_SOCK: ${{ env.SSH_AUTH_SOCK }}
+        run: ./deploy_remote.sh

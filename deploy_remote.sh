@@ -2,6 +2,7 @@
 set -e
 
 echo "SSH-Deploy ScaryCaves version $VERSION"
+echo "SSH_AUTH_SOCK is $SSH_AUTH_SOCK"
 
 scp -v -r ./stack.yml $DEPLOY_USERNAME@scarycaves.meancat.com:/home/$DEPLOY_USERNAME
 
