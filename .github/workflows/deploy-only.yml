@@ -35,6 +35,7 @@ jobs:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           SSH_AUTH_SOCK: ${{ env.SSH_AUTH_SOCK }}
         with:
+          envs: VERSION,DEPLOY_USERNAME,DOCKER_USERNAME
           host: scarycaves.meancat.com
           username: ${{ secrets.DEPLOY_USERNAME }}
           key: ${{ secrets.DO_DEPLOY_PRIVATE_KEY }}
