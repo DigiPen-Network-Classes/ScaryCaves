@@ -33,7 +33,7 @@ jobs:
             username: ${{ secrets.DEPLOY_USERNAME }}
             key: ${{ secrets.DO_DEPLOY_PRIVATE_KEY }}
             source: ./stack.yml
-            target: /home/${{ secrets.DEPLOY_USERNAME }}/stack.yml
+            target: /home/${{ secrets.DEPLOY_USERNAME }}
 
       - name: update stack on remote
         uses: appleboy/ssh-action@v1.2.0
