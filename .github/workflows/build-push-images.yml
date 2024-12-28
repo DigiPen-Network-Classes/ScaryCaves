@@ -1,0 +1,42 @@
+name: Build and Push Images
+
+on:
+  workflow_dispatch:
+    inputs:
+      scary_version:
+        description: 'Version of the application'
+        required: true
+        default: '1.0.${{ github.run_number }}'
+
+env:
+  VERSION: ${{ github.event.inputs.scary_version }}
+
+jobs:
+  build-push:
+    runs-on: [ubuntu-latest]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: build ASP.NET image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/scary_aspnet:${{ env.VERSION }} ./ScaryCavesWeb
+
+      - name: build Next.js image
+        run: |
+          docker build \
+          --build-arg NEXT_PUBLIC_BASE_URL=https://scarycaves.meancat.com \
+          --build-arg NEXT_PUBLIC_API_BASE_URL=https://scarycaves.meancat.com/api \
+          -t ${{ secrets.DOCKER_USERNAME }}/scary_next:${{ env.VERSION }} ./scarycaves-next
+
+      - name: Login to Docker
+        uses: docker/login-action@v3
+        with:
+            username: ${{ secrets.DOCKER_USERNAME }}
+            password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: push ASP.NET image
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/scary_aspnet:${{ env.VERSION }}
+
+      - name: push Next.js image
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/scary_next:${{ env.VERSION }}
