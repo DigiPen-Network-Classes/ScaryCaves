@@ -6,7 +6,7 @@ on:
       scary_version:
         description: 'Version of the application'
         required: true
-        default: '1.0.${{ github.run_number }}'
+        default: '1.0.0'
 
 env:
   VERSION: ${{ github.event.inputs.scary_version }}
