@@ -18,13 +18,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: set version
+        env:
+          VERSION: ${{ env.VERSION }}
+        run: |
+          envsubst < stack.version.yml > stack.version.yml
+
       - name: deploy files
         uses: appleboy/scp-action@v0.1.3
         with:
             host: scarycaves.meancat.com
             username: ${{ secrets.DEPLOY_USERNAME }}
             key: ${{ secrets.DO_DEPLOY_PRIVATE_KEY }}
-            source: ./stack.yml
+            source: "./stack.yml,./stack.version.yml"
             target: /home/${{ secrets.DEPLOY_USERNAME }}
 
       - name: update stack on remote
@@ -33,7 +39,6 @@ jobs:
           VERSION: ${{ env.VERSION }}
           DEPLOY_USERNAME: ${{ secrets.DEPLOY_USERNAME }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          SSH_AUTH_SOCK: ${{ env.SSH_AUTH_SOCK }}
         with:
           envs: VERSION,DEPLOY_USERNAME,DOCKER_USERNAME
           host: scarycaves.meancat.com
