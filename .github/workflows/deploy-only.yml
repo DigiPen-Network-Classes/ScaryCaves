@@ -26,10 +26,24 @@ jobs:
       - name: Verify SSH keys
         run: ssh-add -l
 
-      - name: Deploy Stack
+      - name: deploy files
+        uses: appleboy/scp-action@v0.1.7
+        with:
+            host: scarycaves.meancat.com
+            username: ${{ secrets.DEPLOY_USERNAME }}
+            key: ${{ secrets.DO_DEPLOY_PRIVATE_KEY }}
+            source: ./stack.yml
+            target: /home/${{ secrets.DEPLOY_USERNAME }}/stack.yml
+
+      - name: update stack on remote
+        uses: appleboy/ssh-action@v1.2.0
         env:
-            VERSION: ${{ env.VERSION }}
-            DEPLOY_USERNAME: ${{ secrets.DEPLOY_USERNAME }}
-            DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-            SSH_AUTH_SOCK: ${{ env.SSH_AUTH_SOCK }}
-        run: ./deploy_remote.sh
+          VERSION: ${{ env.VERSION }}
+          DEPLOY_USERNAME: ${{ secrets.DEPLOY_USERNAME }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          SSH_AUTH_SOCK: ${{ env.SSH_AUTH_SOCK }}
+        with:
+          host: scarycaves.meancat.com
+          username: ${{ secrets.DEPLOY_USERNAME }}
+          key: ${{ secrets.DO_DEPLOY_PRIVATE_KEY }}
+          script_path: ./deploy_images.sh
