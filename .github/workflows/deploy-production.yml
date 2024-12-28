@@ -40,14 +40,31 @@ jobs:
       - name: push Next.js image
         run: docker push ${{ secrets.DOCKER_USERNAME }}/scary_next:${{ env.VERSION }}
 
-      - name: Prepare SSH key
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-            ssh-private-key: ${{ secrets.DO_DEPLOY_PRIVATE_KEY }}
-
-      - name: Deploy Stack
+      - name: set version
+        env:
+          VERSION: ${{ env.VERSION }}
         run: |
-          export VERSION=${{ env.VERSION }}
-          export DEPLOY_USERNAME=${{ secrets.DEPLOY_USERNAME }}
-          export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
-          ./deploy_remote.sh
+          envsubst < stack.version.yml > stack.tmp.version.yml
+            mv stack.tmp.version.yml stack.version.yml
+
+      - name: deploy files to remote
+        uses: appleboy/scp-action@v0.1.3
+        with:
+          host: scarycaves.meancat.com
+          username: deploy
+          key: ${{ secrets.DO_DEPLOY_PRIVATE_KEY }}
+          source: "./stack.yml,./stack.version.yml"
+          target: /home/deploy
+
+      - name: update stack on remote
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          VERSION: ${{ env.VERSION }}
+          DEPLOY_USERNAME: deploy
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        with:
+          envs: VERSION,DEPLOY_USERNAME,DOCKER_USERNAME
+          host: scarycaves.meancat.com
+          username: deploy
+          key: ${{ secrets.DO_DEPLOY_PRIVATE_KEY }}
+          script_path: ./deploy_images.sh
