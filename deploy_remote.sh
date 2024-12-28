@@ -3,7 +3,7 @@ set -e
 
 echo "SSH-Deploy ScaryCaves version $VERSION"
 
-scp -v stack.yml $DEPLOY_USERNAME@scarycaves.meancat.com:
+scp -v -r ./stack.yml $DEPLOY_USERNAME@scarycaves.meancat.com:/home/$DEPLOY_USERNAME
 
 ssh -v $DEPLOY_USERNAME@scarycaves.meancat.com <<"EOF"
   echo "Pulling ScaryCaves version $VERSION"
