@@ -18,6 +18,8 @@ if (builder.Environment.IsDevelopment())
         builder.Configuration.AddJsonFile(localUser, optional: true, reloadOnChange: true);
     }
 }
+builder.Configuration.AddEnvironmentVariables();
+
 var scaryCaveSettings = new ScaryCaveSettings();
 builder.Configuration.Bind("ScaryCave", scaryCaveSettings);
 builder.Services.AddSingleton(scaryCaveSettings);
