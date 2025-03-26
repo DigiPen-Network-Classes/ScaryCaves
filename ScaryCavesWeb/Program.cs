@@ -6,15 +6,22 @@ using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// setup configuration files:
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true);
+if (builder.Environment.IsDevelopment())
+{
+    var localUser = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.LocalUser.json");
+    if (File.Exists(localUser))
+    {
+        builder.Configuration.AddJsonFile(localUser, optional: true, reloadOnChange: true);
+    }
+}
 var scaryCaveSettings = new ScaryCaveSettings();
 builder.Configuration.Bind("ScaryCave", scaryCaveSettings);
 builder.Services.AddSingleton(scaryCaveSettings);
-/*
-builder.WebHost.ConfigureKestrel(options =>
-{
-    options.ListenLocalhost(8000);
-});
-*/
+
 builder.Services.AddScaryDataProtection(scaryCaveSettings);
 
 // used for recaptcha:
@@ -44,28 +51,13 @@ builder.Host.UseOrleans(static siloBuilder =>
     siloBuilder.AddRedisGrainStorage(ScaryCaveSettings.AccountStorageProvider, options =>
     {
         options.EntryExpiry = scaryCaveSettings.AccountExpires;
-        options.ConfigurationOptions = new ConfigurationOptions
-        {
-            DefaultDatabase = 1,
-            EndPoints =
-            {
-                scaryCaveSettings.RedisConnectionString
-            },
-            AbortOnConnectFail = false,
-        };
+        options.ConfigurationOptions = ConfigurationOptions.Parse(scaryCaveSettings.RedisConnectionString);
     });
+
     // everything else is stored in redis without expiration (and it doesn't grow over time)
     siloBuilder.AddRedisGrainStorageAsDefault(options =>
     {
-        options.ConfigurationOptions = new ConfigurationOptions
-        {
-            DefaultDatabase = 0,
-            EndPoints =
-            {
-                scaryCaveSettings.RedisConnectionString
-            },
-            AbortOnConnectFail = false
-        };
+        options.ConfigurationOptions = ConfigurationOptions.Parse(scaryCaveSettings.RedisConnectionString);
     });
 });
 
