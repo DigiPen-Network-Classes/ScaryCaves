@@ -1,31 +1,48 @@
+using ScaryCavesWeb.Actors;
 using StackExchange.Redis;
 
 namespace ScaryCavesWeb.Services.Chat;
 
-public interface IChannelPartition
+public interface IChatChannelPartitionService
 {
-    Task<string> GetChannelActorId(string channelName);
-    Task<RedisChannel> GetChannel(string channelName, Guid? accountId=null);
+    /// <summary>
+    /// Build a RedisChannel for the channel, determining which partition id to use.
+    /// </summary>
+    /// <param name="channelName">friendly, non-partitioned, channel name like "global"</param>
+    /// <param name="accountId">Optional. Who's asking? (Might use features like language, location, friends...)</param>
+    /// <returns>RedisChannel ex. "chat:actor:global_0"</returns>
+    Task<RedisChannel> FindPartition(string channelName, Guid? accountId=null);
 
-    Task<RedisChannel> GetChannelFromActorId(string actorId);
+    /// <summary>
+    /// Given an actor id, build the RedisChannel it is subscribing to
+    /// </summary>
+    /// <param name="actorId">ex. global_0</param>
+    /// <returns>ex. "chat:actor:global_0"</returns>
+    Task<RedisChannel> BuildActorChannel(string actorId);
+
+    Task WakeActorForChannel(RedisChannel channel);
 }
 
-
-public class ChannelPartition : IChannelPartition
+public class ChatChannelPartitionService(IClusterClient clusterClient) : IChatChannelPartitionService
 {
-    public Task<string> GetChannelActorId(string channelName)
+
+    private IClusterClient ClusterClient { get; } = clusterClient;
+    public async Task<RedisChannel> FindPartition(string channelName, Guid? accountId=null)
     {
-        return Task.FromResult($"{channelName}_0");
+        var actorId = $"{channelName}_0";
+        return await BuildActorChannel(actorId);
     }
 
-    public async Task<RedisChannel> GetChannel(string channelName, Guid? accountId=null)
+    public Task<RedisChannel> BuildActorChannel(string actorId) => Task.FromResult(new RedisChannel($"chat:actor:{actorId}", RedisChannel.PatternMode.Literal));
+
+    private static string GetActorIdFromChannel(string channel)
     {
-        var actorId = await GetChannelActorId(channelName);
-        return await GetChannelFromActorId(actorId);
+        return channel.Split(":").Last();
     }
 
-    public Task<RedisChannel> GetChannelFromActorId(string actorId)
+    public async Task WakeActorForChannel(RedisChannel channel)
     {
-        return Task.FromResult(new RedisChannel($"chat:{actorId}", RedisChannel.PatternMode.Literal));
+        var actorId = GetActorIdFromChannel(channel.ToString());
+        await ClusterClient.GetGrain<IChatSubscriberActor>(actorId).Awake();
     }
 }

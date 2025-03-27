@@ -66,7 +66,8 @@ public static class ServiceDependency
         services.AddSingleton<IWorldDatabase, WorldDatabase>();
 
         // chat
-        services.AddSingleton<IChannelPartition, ChannelPartition>();
+        services.AddSingleton<IChatChannelPartitionService, ChatChannelPartitionService>();
+        services.AddSingleton<IChatPublisher, ChatPublisher>();
 
         return services;
     }

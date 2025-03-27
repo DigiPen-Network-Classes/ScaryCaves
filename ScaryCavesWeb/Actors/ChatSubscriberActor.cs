@@ -21,12 +21,12 @@ public interface IChatSubscriberActor : IGrainWithStringKey
 public class ChatSubscriberActor(ILogger<ChatSubscriberActor> logger,
     IConnectionMultiplexer connectionMultiplexer,
     IHubContext<GameHub> hubContext,
-    IChannelPartition channelPartition): Grain, IChatSubscriberActor
+    IChatChannelPartitionService chatChannelPartitionService): Grain, IChatSubscriberActor
 {
     private ILogger<ChatSubscriberActor> Logger { get; } = logger;
     private IConnectionMultiplexer Redis { get; } = connectionMultiplexer;
     private IHubContext<GameHub> HubContext { get; } = hubContext;
-    private IChannelPartition ChannelPartition { get; } = channelPartition;
+    private IChatChannelPartitionService ChatChannelPartitionService { get; } = chatChannelPartitionService;
 
     private ChannelMessageQueue? Subscription { get; set; }
 
@@ -45,7 +45,7 @@ public class ChatSubscriberActor(ILogger<ChatSubscriberActor> logger,
     public async Task Subscribe()
     {
         Logger.LogInformation("Actor {ActorId} preparing to subscribe", this.GetPrimaryKeyString());
-        var channel = await ChannelPartition.GetChannelFromActorId(this.GetPrimaryKeyString());
+        var channel = await ChatChannelPartitionService.BuildActorChannel(this.GetPrimaryKeyString());
         var subscriber = Redis.GetSubscriber();
         Subscription = await subscriber.SubscribeAsync(channel);
         Subscription.OnMessage(OnMessage);

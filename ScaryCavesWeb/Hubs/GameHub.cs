@@ -1,25 +1,20 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
-using Newtonsoft.Json;
 using ScaryCavesWeb.Actors;
 using ScaryCavesWeb.Models;
 using ScaryCavesWeb.Services.Chat;
-using StackExchange.Redis;
 
 namespace ScaryCavesWeb.Hubs;
-
 
 [Authorize]
 public class GameHub(ILogger<GameHub> logger,
     IClusterClient clusterClient,
-    IConnectionMultiplexer connectionMultiplexer,
-    IChannelPartition channelPartition) : Hub
+    IChatPublisher chatPublisher) : Hub
 {
     private ILogger<GameHub> Logger { get; } = logger;
     private IClusterClient ClusterClient { get; } = clusterClient;
-    private IConnectionMultiplexer Redis { get; } = connectionMultiplexer;
-    private IChannelPartition ChannelPartition { get; } = channelPartition;
+    private IChatPublisher ChatPublisher { get; } = chatPublisher;
 
     private string? PlayerName => Context.User?.FindFirst(ClaimTypes.Name)?.Value;
 
@@ -104,15 +99,7 @@ public class GameHub(ILogger<GameHub> logger,
 
     public async Task<bool> SendMessage(string channelName, string message)
     {
-        var actorId = await ChannelPartition.GetChannelActorId(channelName);
-        await ClusterClient.GetGrain<IChatSubscriberActor>(actorId).Awake();
-
-        var key = await ChannelPartition.GetChannel(channelName, AccountId);
-        Logger.LogInformation("Player {PlayerName} sending message {Message} for channel {Channel}", PlayerName, message, key);
-
-        var db = Redis.GetSubscriber();
-        var payload = JsonConvert.SerializeObject(new ChatMessage(PlayerName ?? "Unknown", AccountId, message));
-        await db.PublishAsync(key, payload);
+        await ChatPublisher.Publish(channelName, new ChatMessage(PlayerName ?? "Unknown", AccountId, message));
         return true;
     }
 }
