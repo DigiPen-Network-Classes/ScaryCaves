@@ -14,6 +14,8 @@ public class ScaryCaveSettings
 
     public string RedisConnectionString { get; set; } = "";
 
+    public string ChatRedisConnectionString { get; set; } = "";
+
     /// <summary>
     /// This is how long mobs will wait between actions
     /// </summary>

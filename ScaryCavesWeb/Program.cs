@@ -22,6 +22,11 @@ builder.Configuration.AddEnvironmentVariables();
 
 var scaryCaveSettings = new ScaryCaveSettings();
 builder.Configuration.Bind("ScaryCave", scaryCaveSettings);
+builder.Services
+    .AddOptions<ScaryCaveSettings>()
+    .BindConfiguration("ScaryCave")
+    .ValidateDataAnnotations();
+
 builder.Services.AddSingleton(scaryCaveSettings);
 
 builder.Services.AddScaryDataProtection(scaryCaveSettings);

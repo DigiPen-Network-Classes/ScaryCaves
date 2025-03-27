@@ -8,7 +8,9 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using ScaryCavesWeb.Models;
 using ScaryCavesWeb.Services.Authentication;
+using ScaryCavesWeb.Services.Chat;
 using ScaryCavesWeb.Services.Databases;
+using StackExchange.Redis;
 
 namespace ScaryCavesWeb.Services;
 
@@ -42,6 +44,13 @@ public static class ServiceDependency
 
     public static IServiceCollection AddScaryCaveWeb(this IServiceCollection services)
     {
+        // redis
+        services.AddSingleton<IConnectionMultiplexer>(sp =>
+        {
+            var settings = sp.GetRequiredService<ScaryCaveSettings>();
+            var options = ConfigurationOptions.Parse(settings.ChatRedisConnectionString);
+            return ConnectionMultiplexer.Connect(options);
+        });
         // google recaptcha checker
         services.AddTransient<IReCaptchaService, ReCaptchaService>();
 
@@ -55,6 +64,9 @@ public static class ServiceDependency
         // databases
         services.AddSingleton<IZoneDatabase, ZoneDatabase>(_ => ZoneDatabase.Build());
         services.AddSingleton<IWorldDatabase, WorldDatabase>();
+
+        // chat
+        services.AddSingleton<IChannelPartition, ChannelPartition>();
 
         return services;
     }

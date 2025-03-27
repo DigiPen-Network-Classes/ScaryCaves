@@ -10,6 +10,7 @@ import PlayerStats from '../../components/PlayerStats';
 import PlayerMessages from '../../components/PlayerMessages';
 import { Mob } from '../../types/Mob';
 import {Room} from '../../types/Room';
+import Chat from '../../components/Chat';
 
 const RoomPage : React.FC = () => {
     const router = useRouter();
@@ -187,6 +188,9 @@ const RoomPage : React.FC = () => {
             </div>
             <div className="col-md-4">
                 <PlayerMessages messages={messages} />
+            </div>
+            <div className="text-center col-md-8">
+                <Chat connection={connectionRef.current} userName={playerView.player.name} />
             </div>
         </div>
     );
