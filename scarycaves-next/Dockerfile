@@ -1,4 +1,4 @@
-FROM node:18 AS build
+FROM node:20 AS build
 
 ARG NEXT_PUBLIC_BASE_URL
 ARG NEXT_PUBLIC_API_BASE_URL
@@ -14,7 +14,7 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-FROM node:18-alpine AS runtime
+FROM node:20-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=build /app/next.config.ts .
