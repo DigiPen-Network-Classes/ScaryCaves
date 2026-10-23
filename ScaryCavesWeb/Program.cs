@@ -1,6 +1,4 @@
-using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using ScaryCavesWeb.Hubs;
 using ScaryCavesWeb.Services;
 using StackExchange.Redis;
 
@@ -79,14 +77,6 @@ builder.Services.AddAuthorization();
 // my (local, web) dependencies:
 builder.Services.AddScaryCaveWeb();
 
-// signalR
-builder.Services.AddSignalR()
-    .AddJsonProtocol(options =>
-    {
-        // send enums as strings
-        options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-    });
-
 // cors for scarycave-spa
 builder.Services.AddCors(options =>
 {
@@ -120,7 +110,6 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapHub<GameHub>("/GameHub");
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

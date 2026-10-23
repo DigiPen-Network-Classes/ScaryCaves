@@ -1,6 +1,5 @@
-using Microsoft.AspNetCore.SignalR;
 using ScaryCavesWeb.Actors.Extensions;
-using ScaryCavesWeb.Hubs;
+using ScaryCavesWeb.Live;
 using ScaryCavesWeb.Models;
 using ScaryCavesWeb.Services;
 
@@ -44,12 +43,12 @@ public interface IRoomActor : IGrainWithIntegerCompoundKey
 
 public class RoomActor(ILogger<RoomActor> logger,
     [PersistentState(nameof(Room))] IPersistentState<Room> roomState,
-    IHubContext<GameHub> hubContext,
+    IRoomBroadcaster broadcaster,
     IRandomService randomService) : Grain, IRoomActor, IRoomDefinitionActor
 {
     private ILogger<RoomActor> Logger { get; } = logger;
     private IPersistentState<Room> RoomState { get; } = roomState;
-    private IHubContext<GameHub> HubContext { get; } = hubContext;
+    private IRoomBroadcaster Broadcaster { get; } = broadcaster;
     private IRandomService Random { get; } = randomService;
 
     public async Task<Room> Get()
@@ -158,11 +157,15 @@ public class RoomActor(ILogger<RoomActor> logger,
     {
         var room = await Get();
         Logger.LogInformation("Player {Name} is entering room {RoomId} in zone {ZoneName}", player.Name, room.Id, room.ZoneName);
+        // already here means a second tab for the same player: nothing to announce
+        var alreadyHere = room.PlayersInRoom.Contains(player.Name);
         room.AddPlayer(player.Name);
-        // add player connection to the room group for messages:
-        var groupName = room.Location.ToString();
-        await HubContext.Clients.Group(groupName).SendAsync("PlayerEntered", player.Name);
-        await HubContext.Groups.AddToGroupAsync(player.ConnectionId, groupName);
+        // tell everyone already in the room, then start listening ourselves:
+        if (!alreadyHere)
+        {
+            Broadcaster.Publish(room.Location, new RoomEvent(RoomEventKind.RoomChanged, new RoomState(room), $"{player.Name} has entered the room."));
+        }
+        Broadcaster.Join(player.ConnectionId, room.Location);
         await RoomState.WriteStateAsync();
         return room;
     }
@@ -173,8 +176,7 @@ public class RoomActor(ILogger<RoomActor> logger,
         room.AddMob(mob);
 
         // tell room mob is here
-        var groupName = room.Location.ToString();
-        await HubContext.Clients.Group(groupName).SendAsync("MobEntered", mob);
+        Broadcaster.Publish(room.Location, new RoomEvent(RoomEventKind.RoomChanged, new RoomState(room), $"{mob.Name} has entered the room."));
 
         await RoomState.WriteStateAsync();
         return room;
@@ -190,8 +192,8 @@ public class RoomActor(ILogger<RoomActor> logger,
             {
                 room.RemovePlayer(p.Name);
                 Logger.LogInformation("Player {Name} is leaving Room {RoomGroup}", p.Name, roomGroup);
-                await HubContext.Groups.RemoveFromGroupAsync(p.ConnectionId, roomGroup);
-                await HubContext.Clients.Group(roomGroup).SendAsync("PlayerLeft", p.Name);
+                Broadcaster.Leave(p.ConnectionId, room.Location);
+                Broadcaster.Publish(room.Location, new RoomEvent(RoomEventKind.RoomChanged, new RoomState(room), $"{p.Name} has left the room."));
                 break;
             }
             case Mob m:
@@ -200,7 +202,7 @@ public class RoomActor(ILogger<RoomActor> logger,
                     Logger.LogWarning("Mob {InstanceId} said they left this room, but they aren't found in room {RoomId}?", m.InstanceId, room.Id);
                     return room;
                 }
-                await HubContext.Clients.Group(roomGroup).SendAsync("MobLeft", mobState);
+                Broadcaster.Publish(room.Location, new RoomEvent(RoomEventKind.RoomChanged, new RoomState(room), $"{mobState.Name} has left the room."));
                 break;
             default:
                 throw new Exception("Unknown mobile type");
