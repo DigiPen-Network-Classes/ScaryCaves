@@ -15,16 +15,22 @@ by hand, in order, on `scarycaves.meancat.com` unless noted.
    docker service rm scarycaves_scary_next
    ```
 
-3. **Flush the game's Redis data.** Orleans went from 8.x to 10.x and may not read state the
-   old version stored. Nothing here is precious: accounts and players expire after a day, and
-   the world is rebuilt from `scary-cave.json` on startup. Everyone will need to re-register.
+3. **Stop the old ASP.NET app, then flush the game's Redis data.** Orleans went from 8.x to
+   10.x and the new version won't read state the old one stored. Stop the old app *first*:
+   while it runs, its mobs and players keep writing old-format state every few seconds, which
+   would undo the flush. Nothing here is precious: accounts and players expire after a day, and
+   the world is rebuilt from `scary-cave.json` on startup. Everyone will need to re-register
+   (anyone still holding a login cookie is signed out the next time their cave page connects).
 
    ```bash
+   docker service scale scarycaves_scary_aspnet=0
    docker exec $(docker ps -q -f name=scarycaves_redis) redis-cli FLUSHALL
    ```
 
 4. **Deploy the new stack:** run the *Deploy to Production* workflow with the same version
-   (or `VERSION=<version> DOCKER_USERNAME=trasa ./deploy_images.sh` on the server).
+   (or `VERSION=<version> DOCKER_USERNAME=trasa ./deploy_images.sh` on the server). The
+   stack's `replicas: 1` brings `scary_aspnet` back up on the new image; check with
+   `docker service ls`.
 
 5. **Install the new nginx config.** Copy the repo's [`scarycaves`](../scarycaves) file over
    the site config on the server (all traffic now goes to port 8000; the `/api` location is

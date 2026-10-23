@@ -1,4 +1,7 @@
 using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http.Features;
 using ScaryCavesWeb.Actors;
 using ScaryCavesWeb.Components.Shared;
@@ -29,19 +32,39 @@ public static class CaveEndpoints
         var logger = loggers.CreateLogger("Cave.Stream");
         var playerName = http.User.Identity!.Name!;
 
+        var player = clusterClient.GetGrain<IPlayerActor>(playerName);
+        using var subscription = broadcaster.Subscribe(playerName);
+        ClientPlayerView view;
+        try
+        {
+            view = await player.BeginSession(subscription.StreamId);
+        }
+        catch (Exception e)
+        {
+            // The cookie outlived the player: the records expired, or Redis was flushed.
+            // Sign out and refuse, so the page's reload lands on the login page
+            // instead of reconnecting to this forever.
+            logger.LogWarning(e, "Player {PlayerName} could not begin a session; signing out", playerName);
+            await http.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            http.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            // keep the sign-out cookie; an EventSource has no use for an error page body
+            if (http.Features.Get<IStatusCodePagesFeature>() is { } statusCodePages)
+            {
+                statusCodePages.Enabled = false;
+            }
+            return;
+        }
+
         http.Response.Headers.ContentType = "text/event-stream";
         http.Response.Headers.CacheControl = "no-cache, no-transform";
         // Tells nginx not to buffer the stream.
         http.Response.Headers["X-Accel-Buffering"] = "no";
         http.Features.Get<IHttpResponseBodyFeature>()?.DisableBuffering();
 
-        var player = clusterClient.GetGrain<IPlayerActor>(playerName);
-        using var subscription = broadcaster.Subscribe(playerName);
         try
         {
-            // Order matters: the session must be ours before older streams are told to stop,
-            // so their EndSession(oldId) arrives as a no-op.
-            var view = await player.BeginSession(subscription.StreamId);
+            // Order matters: the session (begun above) must be ours before older streams
+            // are told to stop, so their EndSession(oldId) arrives as a no-op.
             broadcaster.Claim(subscription);
             logger.LogInformation("Player {PlayerName} stream {StreamId} connected", playerName, subscription.StreamId);
 

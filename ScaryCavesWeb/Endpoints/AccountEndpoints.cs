@@ -23,7 +23,15 @@ public static class AccountEndpoints
             if (http.User.FindFirst(ClaimTypes.NameIdentifier) is { Value: { } id } && Guid.TryParse(id, out var accountId))
             {
                 logger.LogInformation("Logout Request for '{PlayerName}'", http.User.Identity?.Name);
-                await clusterClient.GetGrain<IAccountActor>(accountId).Logout();
+                try
+                {
+                    await clusterClient.GetGrain<IAccountActor>(accountId).Logout();
+                }
+                catch (Exception e)
+                {
+                    // e.g. the account already expired; sign out of the cookie regardless
+                    logger.LogWarning(e, "Logout: could not end the session for '{PlayerName}'", http.User.Identity?.Name);
+                }
             }
             else
             {
