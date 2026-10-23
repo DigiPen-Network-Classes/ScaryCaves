@@ -1,0 +1,49 @@
+@* The part of the cave page that changes: re-rendered whole on every room event. *@
+<div id="room-panel" sse-swap="room" hx-swap="outerHTML">
+    <h1 class="room-name display-4">Room @Room.Id: @Room.Name</h1>
+    <p class="room-description">@Room.Description</p>
+
+    <div class="mob-list">
+        @foreach (var mob in Room.MobsInRoom)
+        {
+            <p class="mob-description">@mob.Description</p>
+        }
+    </div>
+
+    @if (OtherPlayers.Count > 0)
+    {
+        <div class="other-players">
+            <p>Other Players:</p>
+            <ul>
+                @foreach (var name in OtherPlayers)
+                {
+                    <li>@name</li>
+                }
+            </ul>
+        </div>
+    }
+
+    <p class="player-action">Some things you might do:</p>
+    <ul class="player-action">
+        @foreach (var direction in Room.Exits)
+        {
+            <li class="player-action">
+                <button type="button" class="btn btn-outline-primary player-action"
+                        hx-post="/cave/move/@direction" hx-target="#room-panel" hx-swap="outerHTML">
+                    GO @direction
+                </button>
+            </li>
+        }
+    </ul>
+
+    <div class="player-stats">
+        <p>Your Name: @ViewerName</p>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public RoomState Room { get; set; } = null!;
+    [Parameter, EditorRequired] public string ViewerName { get; set; } = "";
+
+    private List<string> OtherPlayers => Room.PlayersInRoom.Where(p => p != ViewerName).ToList();
+}

@@ -51,6 +51,7 @@ public static class ServiceDependency
 
         // live room events, read by each player's SSE stream
         services.AddSingleton<IRoomBroadcaster, RoomBroadcaster>();
+        services.AddSingleton<FragmentRenderer>();
 
         // authentication
         services.AddSingleton<IAccountSession, AccountSession>();
