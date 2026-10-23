@@ -7,10 +7,13 @@ public interface ITestGrain : IGrainWithIntegerKey
     Task<bool> Ping();
 }
 
+// Orleans 10 only loads stored state whose type it knows: [GenerateSerializer] puts it on the allow-list.
+[GenerateSerializer]
+[Alias("ScaryCavesWeb.Actors.TestState")]
 public class TestState(bool success)
 {
-    public bool Success { get; set; } = success;
-    public long Timestamp { get; set; }
+    [Id(0)] public bool Success { get; set; } = success;
+    [Id(1)] public long Timestamp { get; set; }
 }
 
 public class TestGrain([PersistentState(nameof(TestState))] IPersistentState<TestState> testState): Grain, ITestGrain

@@ -1,0 +1,6 @@
+<li>@Text (@At.ToString("HH:mm:ss"))</li>
+
+@code {
+    [Parameter, EditorRequired] public string Text { get; set; } = "";
+    [Parameter, EditorRequired] public DateTimeOffset At { get; set; }
+}

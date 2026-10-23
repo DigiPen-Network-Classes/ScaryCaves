@@ -36,21 +36,6 @@ services:
     depends_on:
       - redis
 
-  scary_next:
-    secrets:
-      - recaptcha_secret_key
-    environment:
-      - NEXT_PUBLIC_RECAPTCHA_SITE_KEY_FILE=/run/secrets/recaptcha_secret_key
-    image: trasa/scary_next:latest
-    networks:
-      - scary_net
-    ports:
-      - "3000:3000"
-    deploy:
-      replicas: 1
-    depends_on:
-      - scary_aspnet
-
 volumes:
   data_protection:
   redis_data:

@@ -1,16 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <UserSecretsId>scarycave-local-secrets</UserSecretsId>
-        <WarningsAsErrors>true</WarningsAsErrors>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <OutputType>Exe</OutputType>
   </PropertyGroup>
 
   <ItemGroup>
-      <PackageReference Include="Microsoft.Orleans.Persistence.Redis" Version="8.2.0" />
-      <PackageReference Include="Microsoft.Orleans.Server" Version="8.2.0" />
+      <PackageReference Include="Microsoft.Orleans.Persistence.Redis" Version="10.4.0" />
+      <PackageReference Include="Microsoft.Orleans.Server" Version="10.4.0" />
   </ItemGroup>
   <ItemGroup>
       <EmbeddedResource Include="Zones/scary-cave.json">

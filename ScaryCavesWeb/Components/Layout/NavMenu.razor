@@ -1,0 +1,27 @@
+<nav class="navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+    <div class="container-fluid">
+        <a href="/" class="navbar-brand">The Scary Cave</a><br/>
+        <div class="navbar d-sm-inline-flex justify-content-between" id="navbarNav">
+            <ul class="navbar-nav flex-grow-1">
+                <li class="nav-item">
+                    <form method="post" action="/startover" class="nav-form">
+                        <AntiforgeryToken/>
+                        <button type="submit" class="nav-link">Start Over</button>
+                    </form>
+                </li>
+                <li class="nav-item">
+                    <form method="post" action="/logout" class="nav-form">
+                        <AntiforgeryToken/>
+                        <button type="submit" class="nav-link">Logout</button>
+                    </form>
+                </li>
+                <li class="nav-item">
+                    <a href="/about" class="nav-link">About</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="https://github.com/DigiPen-Network-Classes/ScaryCaves">Project</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>

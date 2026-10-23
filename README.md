@@ -1,7 +1,7 @@
 # The Scary Cave -- an HTTP based Text Adventure
 
 HTTP is stateless. Let's build a (very!) simple text game with multiple users and state,
-using HTTP to make all the pieces go and using a Single Page Application as a client.
+using HTTP to make all the pieces go, with server-rendered pages and a live event stream.
 
 ## About the Scary Cave
 
@@ -13,14 +13,18 @@ not intended to be a "complete and polished product."
 
 The initial design used some rudimentary Razor Views and AspNet MVC to glue things 
 together - which became insufficient once things like Mobiles and other players 
-were added. Fortunately, replacing that with SignalR for messaging and 
-basic next.js/TypeScript Single Page Application was (mostly!) straightforward.
+were added. That was replaced with SignalR for messaging and a next.js/TypeScript
+Single Page Application - which worked, but needed its npm dependencies fixed
+constantly. Now it's back to all-.NET: Razor Components render the pages on the
+server, htmx handles the clicks, and room events arrive over Server-Sent Events.
+There's no npm and no JavaScript build step at all.
 
 ## Interesting Technology
 
-* [ASP.NET Core](https://dotnet.microsoft.com/en-us/apps/aspnet) - for the "Server API"
+* [ASP.NET Core](https://dotnet.microsoft.com/en-us/apps/aspnet) - the web server
 * [Microsoft Orleans](https://learn.microsoft.com/en-us/dotnet/orleans/overview) - for managing game state
-* [next.js and React](https://nextjs.org) - SPA and Client
+* [Razor Components](https://learn.microsoft.com/en-us/aspnet/core/blazor/components/) (static server-side rendering) - the pages
+* [htmx](https://htmx.org) and its SSE extension - clicks and live room updates, vendored under `ScaryCavesWeb/wwwroot/lib`
 * [Redis](https://redis.io) - Game State Database
 
 # Local Development / Getting Started
@@ -38,13 +42,13 @@ image if you wanted, or really ... basically anything.
 The redis connection string is specified in the 'appsettings.json' file and can
 be overridden by the environment variable `ScaryCave__RedisConnectionString`.
 
-## "Backend" API Server
+## The Server
 
-The server-side logic is written in C# and uses ASP.NET Core. i
-(See the `ScaryCavesWeb` project.) This component also runs the Orleans Silo 
-which manages various game state through Actors.
+Everything is one ASP.NET Core app, written in C# (see the `ScaryCavesWeb` project).
+It serves the pages, runs the Orleans Silo which manages game state through Actors,
+and streams room events to each player's browser.
 
-The server runs on port 8000 by default.
+The server runs on port 8000 by default: open http://localhost:8000.
 
 ### Running the Server
 
@@ -119,31 +123,27 @@ actors will deactivate themselves. If there's no player activity, then the Mobs
 will sleep (and stop moving about and consuming CPU). When someone logs in 
 or activates their session, this automatically wakes up the Mobs and Rooms.
 
-## Front-End Client and Single Page Application
+## The Web UI
 
-The client side is written in TypeScript and uses next.js and React. See the `scarycaves-next` project.
+The pages are Razor Components in `ScaryCavesWeb/Components`, rendered on the server
+(static SSR - no Blazor circuit, no `blazor.web.js`).
 
-### Running the Client
-The client runs locally at http://localhost:3000 by default. You can run the client
-from the command line with `npm run dev` from the `scarycaves-next` directory.
-
-### Local Client Settings
-
-Create a .env file that defines a few public settings: (note that these are 
-visible to the client and therefore not secret):
-```bash
-NEXT_PUBLIC_RECAPTCHA_SITE_KEY=public_but_still_wont_tell_you_ha_ha
-NEXT_PUBLIC_BASE_URL=http://localhost:3000
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
-```
-(See env.local for examples)
+* The cave page (`/scarycave`) opens one Server-Sent Events stream, `/cave/stream`.
+  Room actors publish to an in-process `RoomBroadcaster` (`ScaryCavesWeb/Live`), and
+  each player's stream renders the room panel and messages as HTML for htmx to swap in.
+* The exit buttons are htmx POSTs to `/cave/move/{direction}`.
+* htmx, its SSE extension and Bootstrap's CSS are plain files checked in under
+  `ScaryCavesWeb/wwwroot/lib`. To upgrade one, download the new file and replace it.
 
 ### ReCaptcha v3
 
-The client uses Google's ReCaptcha v3 to help prevent bots from spamming the server
+The login and register pages use Google's ReCaptcha v3 to help prevent bots from spamming the server
 and being a nuisance. The secret key is stored ... secretly. ReCaptcha v3 doesn't
 require any user interaction, and returns a score of humanness. (0.0 you are a robot,
 1.0 you are a human.) 50% seemed like a good-enough value.
+
+The site key is public and lives in `appsettings.json` as `ScaryCave:ReCaptchaSiteKey`.
+The secret key is not, and comes from user secrets or a Docker secret (see above).
 
 ## Various Settings
 
@@ -154,18 +154,17 @@ settings that you might want to override.
 * `AccountTimeToLiveSeconds` - Since this is just for fun, accounts and players expire after this amount of time.
 * `MobActivityTimer` - Controls how often a Mob wakes up and decides what to do. Lower value makes a more interesting demo, but requires more cpu.
 * `DefaultZoneId` and `DefaultRoomId` - Where player start (or reset) to.
+* `ReCaptchaSiteKey` - the public reCAPTCHA v3 site key, rendered into the login and register pages.
 * `ReCaptcha` - the secret key should be loaded from an environment variable for production or from DotNet User Secrets for development. The threshold is how human one must be to pass. 
 * `DataProtectionKeyPath` - where should the AspNet app write its Data Protection XML files? This should be a secure location.
 * `DataProtectionCert` - See the section on Data Protection Keys and other Secrets above.
 
 # Docker Swarm
 
-See [build_images.sh](build_images.sh) for how to build the "production" images.
-There are two Dockerfiles - one for `scary_aspnet` and one for `scary_next`. 
-Remember that next.js "compiles in" PUBLIC_NEXT_ environment variables at build
-time, which is weird, but whatever. 
+See [build_images.sh](build_images.sh) for how to build the "production" image.
+There is one Dockerfile, for `scary_aspnet`.
 
-After building, [push_images.sh](push_images.sh) will push the latest images to
+After building, [push_images.sh](push_images.sh) will push the latest image to
 Docker Hub (public repository).
 
 See [stack.yml](stack.yml) for the Swarm Production configuration. That will also
@@ -173,6 +172,9 @@ show how to configure the secrets (and other settings) via environment variables
 
 To deploy the stack, use `docker stack deploy -c stack.yml scarycaves`. 
 See [deploy_local_stack.sh](deploy_local_stack.sh) for an example.
+
+Moving off the old two-container (Next.js + ASP.NET) setup? See
+[docs/cutover-checklist.md](docs/cutover-checklist.md) for the one-time steps.
 
 # Nginx Configuration
 
@@ -183,9 +185,9 @@ Since I can't make up my mind if this is 'scary cave' or 'scary caves', we
 forward both to the same place, then redirect the singular over to 'scarycaves'.
 The TLS certificate works for both.
 
-All traffic is routed to the next-js app, unless it is prefixed with /app
-in which case it goes to the backend server. The /app is removed before aspnet
-sees it.
+All traffic goes to the ASP.NET app on port 8000. Proxy buffering is off so the
+Server-Sent Events stream (`/cave/stream`) reaches the browser as it happens, and
+`X-Forwarded-Proto` tells the app the original request was https.
 
 Using 'localhost' instead of 127.0.0.1 caused all sorts of IPv6 issues.
 Every unique request was timing out for a full 60 seconds before falling back

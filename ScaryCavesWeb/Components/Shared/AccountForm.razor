@@ -1,0 +1,101 @@
+@* Login and Register are the same form with different words and a different account call. *@
+@using ScaryCavesWeb.Services.Authentication
+@inject ScaryCaveSettings Settings
+@inject IReCaptchaService CaptchaService
+@inject IAccountSession AccountSession
+@inject NavigationManager Navigation
+@inject ILogger<AccountForm> Logger
+
+<HeadContent>
+    <script src="https://www.google.com/recaptcha/api.js?render=@Settings.ReCaptchaSiteKey"></script>
+</HeadContent>
+
+<div>
+    <h2 class="display-6">The Scary Cave @(IsLogin ? "Login" : "Registration") Form</h2>
+    <br/>
+
+    <div class="alert alert-info" role="alert">
+        <p class="fw-bold">Important!</p>
+        <p class="small">
+            Since this is Just For Fun, all accounts expire after one day so you may need to re-register.<br/>
+            Player Names are restricted to letters only and must be at least 4 characters long.
+        </p>
+        @if (IsLogin)
+        {
+            <p class="mb-0"><a href="/register" class="text-decoration-underline">Are you a New Player? Register here!</a></p>
+        }
+        else
+        {
+            <p class="mb-0"><a href="/login" class="text-decoration-underline">Are you an Existing Player? Login Here</a></p>
+        }
+    </div>
+
+    @if (ErrorMessage != null)
+    {
+        <div class="alert alert-danger" role="alert">@ErrorMessage</div>
+    }
+
+    <EditForm Model="Input" FormName="@Mode.ToString()" OnValidSubmit="SubmitAsync" method="post"
+              id="captcha-form" data-action="@Mode.ToString().ToLowerInvariant()" data-site-key="@Settings.ReCaptchaSiteKey">
+        <DataAnnotationsValidator/>
+        <div class="formGroup">
+            <label for="player-name">Player Name:</label>
+            <InputText id="player-name" class="form-control" @bind-Value="Input.PlayerName" required/>
+            <ValidationMessage For="() => Input.PlayerName"/>
+        </div>
+        <div class="formGroup">
+            <label for="password">Password:</label>
+            <InputText id="password" type="password" class="form-control" @bind-Value="Input.Password" required/>
+            <ValidationMessage For="() => Input.Password"/>
+        </div>
+        <InputText id="captcha-token" type="hidden" @bind-Value="Input.Token"/>
+        <ValidationMessage For="() => Input.Token"/>
+        <div class="formGroup">
+            <button type="submit" class="btn btn-primary mt-3">@(IsLogin ? "Login" : "Create Player")</button>
+        </div>
+    </EditForm>
+</div>
+
+<script src="js/captcha.js"></script>
+
+@code {
+    public enum AccountFormMode { Login, Register }
+
+    [Parameter, EditorRequired] public AccountFormMode Mode { get; set; }
+
+    [CascadingParameter] private HttpContext HttpContext { get; set; } = null!;
+
+    // null on a plain GET; Input gives the form a model either way
+    [SupplyParameterFromForm(Name = "Input")] private LoginModel? FormInput { get; set; }
+    private LoginModel Input => FormInput ??= new();
+
+    private string? ErrorMessage { get; set; }
+
+    private bool IsLogin => Mode == AccountFormMode.Login;
+
+    private async Task SubmitAsync()
+    {
+        var account = await TryAccountAsync();
+        // never send the password back down
+        Input.Password = "";
+        if (account == null)
+        {
+            ErrorMessage = IsLogin ? "Login failed" : "Registration failed - try a different name.";
+            return;
+        }
+        await HttpContext.ScaryCaveSignIn(account, DateTime.UtcNow.Add(Settings.AccountExpires));
+        Navigation.NavigateTo("/scarycave");
+    }
+
+    private async Task<Account?> TryAccountAsync()
+    {
+        if (!await CaptchaService.IsTokenValid(Input.Token!))
+        {
+            Logger.LogWarning("{Mode}: recaptcha rejected for '{PlayerName}'", Mode, Input.PlayerName);
+            return null;
+        }
+        return IsLogin
+            ? await AccountSession.Login(Input.PlayerName!, Input.Password!)
+            : await AccountSession.Register(Input.PlayerName!, Input.Password!);
+    }
+}

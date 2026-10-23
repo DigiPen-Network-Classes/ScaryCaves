@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <base href="/"/>
+    <meta name="description" content="Do you dare enter ... The Scary Cave?"/>
+    <link rel="stylesheet" href="@Assets["lib/bootstrap/dist/css/bootstrap.min.css"]"/>
+    <link rel="stylesheet" href="@Assets["app.css"]"/>
+    <link rel="icon" href="favicon.ico"/>
+    <HeadOutlet/>
+</head>
+
+<body>
+<Routes/>
+<!-- htmx and its SSE extension are vendored under wwwroot/lib, like Bootstrap: no npm, no CDN.
+     There is no blazor.web.js: every page is static server-side rendering. -->
+<script src="@Assets["lib/htmx/htmx.min.js"]"></script>
+<script src="@Assets["lib/htmx/sse.js"]"></script>
+</body>
+
+</html>

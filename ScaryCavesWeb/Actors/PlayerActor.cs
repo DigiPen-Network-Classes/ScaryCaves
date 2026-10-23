@@ -32,9 +32,10 @@ public interface IPlayerActor : IGrainWithStringKey
     /// <summary>
     /// End a play session, returning the room the player was in (if any)
     /// </summary>
-    /// <returns>Current Room or null if not in a room for some reason</returns>
+    /// <param name="connectionId">the stream ending the session; null ends it unconditionally</param>
+    /// <returns>Current Room or null if not in a room, or if connectionId isn't the current session</returns>
     [Alias("EndSession")]
-    Task<Room?> EndSession();
+    Task<Room?> EndSession(string? connectionId);
 
     [Alias("StartOver")]
     Task<bool> StartOver();
@@ -103,8 +104,13 @@ public class PlayerActor(ILogger<PlayerActor> logger,
         return new ClientPlayerView(Player, room);
     }
 
-    public async Task<Room?> EndSession()
+    public async Task<Room?> EndSession(string? connectionId)
     {
+        if (!Player.OwnsSession(connectionId))
+        {
+            Logger.LogInformation("Player {PlayerName}: stale stream {ConnectionId} closed, session continues", Player.Name, connectionId);
+            return null;
+        }
         var location = Player.GetCurrentLocation();
         var room = await GrainFactory.GetRoomActor(location).Leave(Player);
 

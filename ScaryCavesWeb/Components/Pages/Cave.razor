@@ -1,0 +1,35 @@
+@page "/scarycave"
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery Antiforgery
+
+<PageTitle>The Scary Cave</PageTitle>
+
+@* One SSE stream per page: "room" re-renders the panel, "message" adds a line,
+   "superseded" means the player opened the cave somewhere else. The antiforgery
+   token rides along on every hx-post (the exit buttons). *@
+<div class="row" hx-ext="sse" sse-connect="/cave/stream" sse-close="superseded"
+     hx-headers='{"RequestVerificationToken": "@RequestToken"}'>
+    <div class="text-center col-md-8">
+        <div id="room-panel" sse-swap="room" hx-swap="outerHTML">
+            <p>Entering the cave…</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="player-messages">
+            <p>Player Messages:</p>
+            <ul id="messages" sse-swap="message" hx-swap="afterbegin"></ul>
+        </div>
+    </div>
+</div>
+
+<script src="js/cave.js"></script>
+
+@code {
+    [CascadingParameter] private HttpContext HttpContext { get; set; } = null!;
+
+    private string? RequestToken { get; set; }
+
+    protected override void OnInitialized() =>
+        RequestToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken;
+}
