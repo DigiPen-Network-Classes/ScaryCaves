@@ -68,7 +68,7 @@ public class AccountActor(
     }
     public async Task Logout()
     {
-        await GrainFactory.GetGrain<IPlayerActor>(Account.PlayerName).EndSession();
+        await GrainFactory.GetGrain<IPlayerActor>(Account.PlayerName).EndSession(null);
     }
 
     public Task<Account> GetAccount()

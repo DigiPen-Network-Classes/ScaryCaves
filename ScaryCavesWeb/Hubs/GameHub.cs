@@ -45,7 +45,7 @@ public class GameHub(ILogger<GameHub> logger, IClusterClient clusterClient) : Hu
         Logger.LogInformation("Goodbye Player {PlayerName}", playerName);
         try
         {
-            var room = await ClusterClient.GetGrain<IPlayerActor>(playerName).EndSession();
+            var room = await ClusterClient.GetGrain<IPlayerActor>(playerName).EndSession(Context.ConnectionId);
             Logger.LogInformation("Player {PlayerName} end session; left {RoomId}", playerName, room?.Id);
         }
         catch (Exception e)

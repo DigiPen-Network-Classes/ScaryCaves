@@ -15,7 +15,7 @@ public class Player : IMobile
     [Id(3)] public Guid OwnerAccountId { get; set; }
 
     /// <summary>
-    /// SignalR Connection ID, updated on reconnect
+    /// Id of the player's current SSE stream, updated on reconnect
     /// </summary>
     [Id(4)]
     public string ConnectionId { get; set; }
@@ -31,6 +31,14 @@ public class Player : IMobile
         CurrentZoneName = currentZoneName;
         ConnectionId = connectionId ?? "";
     }
+
+    /// <summary>
+    /// May the stream identified by connectionId end this player's session?
+    /// Null means "end it regardless" (logout); otherwise only the current stream may,
+    /// so a stale tab closing doesn't pull the player out of the room.
+    /// </summary>
+    public bool OwnsSession(string? connectionId) =>
+        connectionId == null || (ConnectionId != "" && ConnectionId == connectionId);
 
     public Location GetCurrentLocation() => new(CurrentRoomId, CurrentZoneName);
 
