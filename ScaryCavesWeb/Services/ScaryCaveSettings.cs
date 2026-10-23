@@ -27,6 +27,11 @@ public class ScaryCaveSettings
     /// </summary>
     public TimeSpan AccountExpires => TimeSpan.FromSeconds(AccountTimeToLiveSeconds ?? DefaultTimeToLiveSeconds);
 
+    /// <summary>
+    /// The public reCAPTCHA v3 site key, rendered into the login and register pages.
+    /// </summary>
+    public string ReCaptchaSiteKey { get; set; } = "";
+
     public string ReCaptchaSecretKeyFile { get; set; } = "";
     public string ReCaptchaSecretKey { get; set; } = "";
     public float ReCaptchaScoreThreshold { get; set; } = 0.5f;

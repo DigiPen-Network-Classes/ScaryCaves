@@ -1,0 +1,33 @@
+@page "/health"
+@using ScaryCavesWeb.Actors
+@inject IClusterClient ClusterClient
+@inject ScaryCaveSettings Settings
+@inject ILogger<Health> Logger
+
+<PageTitle>System Health</PageTitle>
+
+<div>
+    <h1>System Health</h1>
+    <h2>Redis Health: @GoodBad(_orleansHealthy)</h2>
+    <h2>Orleans Health: @GoodBad(_orleansHealthy)</h2>
+    <h2>Recaptcha Site Key: @GoodBad(!string.IsNullOrEmpty(Settings.ReCaptchaSiteKey))</h2>
+</div>
+
+@code {
+    private bool _orleansHealthy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // the test grain round-trips its state through redis, so this checks both
+            _orleansHealthy = await ClusterClient.GetGrain<ITestGrain>(0).Ping();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Health check failed!");
+        }
+    }
+
+    private static string GoodBad(bool ok) => ok ? "Good" : "Bad";
+}

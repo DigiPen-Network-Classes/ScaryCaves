@@ -1,4 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.HttpOverrides;
+using ScaryCavesWeb.Components;
+using ScaryCavesWeb.Endpoints;
 using ScaryCavesWeb.Services;
 using StackExchange.Redis;
 
@@ -67,9 +70,11 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     {
         options.Cookie.HttpOnly = true;
         options.Cookie.SameSite = SameSiteMode.Strict;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-        options.LoginPath = "/Home/Login";
-        options.AccessDeniedPath = "/Home/Login";
+        // Secure whenever the request is: nginx terminates TLS and forwards the scheme,
+        // while plain-http local development still gets a cookie.
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        options.LoginPath = "/login";
+        options.AccessDeniedPath = "/login";
         options.ExpireTimeSpan = scaryCaveSettings.AccountExpires;
     });
 builder.Services.AddAuthorization();
@@ -77,13 +82,13 @@ builder.Services.AddAuthorization();
 // my (local, web) dependencies:
 builder.Services.AddScaryCaveWeb();
 
-// cors for scarycave-spa
-builder.Services.AddCors(options =>
+// nginx on the same host terminates TLS; trust its X-Forwarded-* headers so the app
+// sees https (secure cookies) and the real client address.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
-    options.AddPolicy("AllowReactApp", b => b.WithOrigins("http://localhost:3000")
-        .AllowAnyHeader()
-        .AllowAnyMethod()
-        .AllowCredentials());
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
 });
 
 // This gets activated by the runtime before we start processing http requests,
@@ -91,27 +96,30 @@ builder.Services.AddCors(options =>
 // "Places, Everyone ..."
 builder.Services.AddHostedService<WorldInitializerHostedService>();
 
-// Add controllers to the container.
-builder.Services.AddControllersWithViews();
+// Static SSR only: no AddInteractiveServerComponents(), no @rendermode, no blazor.web.js.
+builder.Services.AddRazorComponents();
+builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddAntiforgery();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+app.UseForwardedHeaders();
+
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
+    app.UseExceptionHandler("/Error", createScopeForErrors: true);
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
-app.UseCors("AllowReactApp");
-app.UseHttpsRedirection();
-app.UseRouting();
+// No UseHttpsRedirection: nginx terminates TLS and already redirects port 80 to https.
+app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseAntiforgery();
 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+app.MapStaticAssets();
+app.MapRazorComponents<App>();
+app.MapAccountEndpoints();
 
 app.Run();

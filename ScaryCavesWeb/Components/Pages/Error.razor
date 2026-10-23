@@ -1,0 +1,22 @@
+@page "/Error"
+@using System.Diagnostics
+
+<PageTitle>Error</PageTitle>
+
+<div>
+    <h2 class="text-danger">An error occurred while processing your request.</h2>
+    @if (!string.IsNullOrEmpty(RequestId))
+    {
+        <p><strong>Request ID:</strong> <code>@RequestId</code></p>
+    }
+    <a href="/" class="btn btn-primary">Back to the entrance</a>
+</div>
+
+@code {
+    [CascadingParameter] private HttpContext? HttpContext { get; set; }
+
+    private string? RequestId { get; set; }
+
+    protected override void OnInitialized() =>
+        RequestId = Activity.Current?.Id ?? HttpContext?.TraceIdentifier;
+}
