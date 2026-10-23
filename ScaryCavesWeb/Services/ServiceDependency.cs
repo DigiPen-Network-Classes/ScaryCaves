@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
+using ScaryCavesWeb.Live;
 using ScaryCavesWeb.Models;
 using ScaryCavesWeb.Services.Authentication;
 using ScaryCavesWeb.Services.Databases;
@@ -47,6 +48,9 @@ public static class ServiceDependency
 
         services.AddSingleton(RandomNumberGenerator.Create());
         services.AddSingleton<IRandomService, RandomService>();
+
+        // live room events, read by each player's SSE stream
+        services.AddSingleton<IRoomBroadcaster, RoomBroadcaster>();
 
         // authentication
         services.AddSingleton<IAccountSession, AccountSession>();
