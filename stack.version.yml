@@ -3,5 +3,3 @@ version: "3.9"
 services:
   scary_aspnet:
     image: trasa/scary_aspnet:${VERSION}
-  scary_next:
-    image: trasa/scary_next:${VERSION}
