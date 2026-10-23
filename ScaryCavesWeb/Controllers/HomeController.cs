@@ -102,7 +102,7 @@ public class HomeController(
     [Authorize]
     public async Task<IActionResult> StartOver()
     {
-        await ClusterClient.GetGrain<IPlayerActor>(PlayerName).StartOver();
+        await ClusterClient.GetGrain<IPlayerActor>(PlayerName!).StartOver();
         return Ok();
     }
 

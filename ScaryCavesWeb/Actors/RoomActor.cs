@@ -67,7 +67,7 @@ public class RoomActor(ILogger<RoomActor> logger,
     {
         var roomId = this.GetPrimaryKeyLong(out var zoneName);
         ArgumentOutOfRangeException.ThrowIfNotEqual(roomDefinition.Id, roomId);
-        RoomState.State = new Room(zoneName, roomDefinition);
+        RoomState.State = new Room(zoneName!, roomDefinition);
         RoomState.State.ClearMobs();
         foreach (var mobIdentifier in roomDefinition.InitialMobs)
         {
@@ -78,7 +78,7 @@ public class RoomActor(ILogger<RoomActor> logger,
             }
             RoomState.State.AddMob(new MobState(mobIdentifier, mobDefinition));
             // tell the individual to reload too:
-            await GrainFactory.GetGrain<IMobActor>(mobIdentifier.InstanceId).Reload(zoneName, roomId, mobDefinition);
+            await GrainFactory.GetGrain<IMobActor>(mobIdentifier.InstanceId).Reload(zoneName!, roomId, mobDefinition);
         }
         await RoomState.WriteStateAsync();
         return RoomState.State;
@@ -93,7 +93,7 @@ public class RoomActor(ILogger<RoomActor> logger,
     private async Task Reload()
     {
         var myRoomId = this.GetPrimaryKeyLong(out var zoneName);
-        var (zoneDefinition, roomDefinition) = await GrainFactory.GetGrain<IZoneDefinitionActor>(zoneName).GetRoomDefinition(myRoomId);
+        var (zoneDefinition, roomDefinition) = await GrainFactory.GetGrain<IZoneDefinitionActor>(zoneName!).GetRoomDefinition(myRoomId);
         if (roomDefinition == null)
         {
             throw new Exception($"Room {myRoomId} not found in zone {zoneName}");
@@ -150,7 +150,7 @@ public class RoomActor(ILogger<RoomActor> logger,
         get
         {
             var id = this.GetPrimaryKeyLong(out var zoneName);
-            return new Location(id, zoneName);
+            return new Location(id, zoneName!);
         }
     }
 

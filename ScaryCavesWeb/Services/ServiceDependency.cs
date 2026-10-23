@@ -33,7 +33,7 @@ public static class ServiceDependency
             throw new FileNotFoundException("DataProtectionCertFile not found", settings.DataProtectionCertFile);
         }
 
-        var certificate = new X509Certificate2(settings.DataProtectionCertFile, settings.ReadDataProtectionCertPassword());
+        var certificate = X509CertificateLoader.LoadPkcs12FromFile(settings.DataProtectionCertFile, settings.ReadDataProtectionCertPassword());
 
         return services.AddDataProtection()
             .PersistKeysToFileSystem(dataProtectionPath)

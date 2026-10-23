@@ -73,7 +73,7 @@ public class GameHub(ILogger<GameHub> logger, IClusterClient clusterClient) : Hu
         Logger.LogInformation("Player {PlayerName} wants to go {Direction}", PlayerName, d);
         try
         {
-            var destinationRoom = await ClusterClient.GetGrain<IPlayerActor>(PlayerName).MoveTo(d);
+            var destinationRoom = await ClusterClient.GetGrain<IPlayerActor>(PlayerName!).MoveTo(d);
             if (destinationRoom == null)
             {
                 Logger.LogInformation("Player {PlayerName} tried to go {Direction} but was not allowed to.", PlayerName, d);
