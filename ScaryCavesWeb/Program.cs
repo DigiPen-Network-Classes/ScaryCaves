@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using ScaryCavesWeb.Components;
 using ScaryCavesWeb.Endpoints;
 using ScaryCavesWeb.Services;
+using ScaryCavesWeb.Services.Authentication;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -76,6 +77,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.LoginPath = "/login";
         options.AccessDeniedPath = "/login";
         options.ExpireTimeSpan = scaryCaveSettings.AccountExpires;
+        options.Events.OnRedirectToLogin = HtmxAuthRedirects.RedirectToLogin;
+        options.Events.OnRedirectToAccessDenied = HtmxAuthRedirects.RedirectToLogin;
     });
 builder.Services.AddAuthorization();
 
