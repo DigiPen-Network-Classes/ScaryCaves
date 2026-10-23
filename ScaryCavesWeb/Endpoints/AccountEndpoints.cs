@@ -15,7 +15,10 @@ public static class AccountEndpoints
     {
         app.MapPost("/logout", async (HttpContext http, IAntiforgery antiforgery, IClusterClient clusterClient, ILoggerFactory loggers) =>
         {
-            await antiforgery.ValidateRequestAsync(http);
+            if (!await antiforgery.IsRequestValidAsync(http))
+            {
+                return Results.BadRequest();
+            }
             var logger = loggers.CreateLogger("Account.Logout");
             if (http.User.FindFirst(ClaimTypes.NameIdentifier) is { Value: { } id } && Guid.TryParse(id, out var accountId))
             {
@@ -28,14 +31,17 @@ public static class AccountEndpoints
             }
             await http.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return Results.Redirect("/");
-        }).DisableAntiforgery(); // validated explicitly above
+        }).DisableAntiforgery(); // validated explicitly, so a bad token is a 400 rather than an exception
 
         app.MapPost("/startover", async (HttpContext http, IAntiforgery antiforgery, IClusterClient clusterClient) =>
         {
-            await antiforgery.ValidateRequestAsync(http);
+            if (!await antiforgery.IsRequestValidAsync(http))
+            {
+                return Results.BadRequest();
+            }
             await clusterClient.GetGrain<IPlayerActor>(http.User.Identity!.Name!).StartOver();
             return Results.Redirect("/scarycave");
-        }).RequireAuthorization().DisableAntiforgery(); // validated explicitly above
+        }).RequireAuthorization().DisableAntiforgery(); // validated explicitly, so a bad token is a 400 rather than an exception
 
         return app;
     }

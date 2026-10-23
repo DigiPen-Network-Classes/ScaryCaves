@@ -121,5 +121,6 @@ app.UseAntiforgery();
 app.MapStaticAssets();
 app.MapRazorComponents<App>();
 app.MapAccountEndpoints();
+app.MapCaveEndpoints();
 
 app.Run();
